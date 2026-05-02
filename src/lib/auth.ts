@@ -13,6 +13,11 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  // Tambahkan trustedOrigins untuk mendukung domain Vercel & preview deployments
+  trustedOrigins: [
+    process.env.BETTER_AUTH_URL || "",
+    "https://*.vercel.app", // Mengizinkan semua preview deployments dari Vercel
+  ],
   user: {
     additionalFields: {
       role: {
