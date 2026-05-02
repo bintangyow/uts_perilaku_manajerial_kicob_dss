@@ -1,8 +1,10 @@
-const appUrl = process.env.BETTER_AUTH_URL;
+// ============================================================
+// KiCob — Better Auth Server Configuration
+// ============================================================
 
-if (!appUrl) {
-  throw new Error("BETTER_AUTH_URL is not set");
-}
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { db } from "@/db";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -21,8 +23,4 @@ export const auth = betterAuth({
       },
     },
   },
-  trustedOrigins: [
-    "http://localhost:3000",
-    appUrl,
-  ],
 });
