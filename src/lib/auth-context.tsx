@@ -44,7 +44,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await authClient.signOut();
+    try {
+      await authClient.signOut();
+    } catch (e) {
+      console.error("Logout failed:", e);
+      // Tetap paksa pindah halaman jika gagal
+    }
   }, []);
 
   const hasRole = useCallback(
