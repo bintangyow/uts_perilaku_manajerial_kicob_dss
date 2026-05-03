@@ -8,12 +8,14 @@ if (!appUrl) {
   throw new Error("BETTER_AUTH_URL is not set");
 }
 
+// Normalisasi URL: hapus trailing slash jika ada
+const cleanAppUrl = appUrl.endsWith("/") ? appUrl.slice(0, -1) : appUrl;
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
-  // Gunakan baseURL dari env agar sinkron dengan client
-  baseURL: process.env.BETTER_AUTH_URL,
+  baseURL: cleanAppUrl,
   emailAndPassword: {
     enabled: true,
   },

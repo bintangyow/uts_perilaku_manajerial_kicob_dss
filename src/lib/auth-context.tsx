@@ -46,9 +46,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     try {
       await authClient.signOut();
+      // Fallback: Hapus cookie manual jika API gagal (karena masalah domain/origin)
+      document.cookie = "better-auth.session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
     } catch (e) {
       console.error("Logout failed:", e);
-      // Tetap paksa pindah halaman jika gagal
+      document.cookie = "better-auth.session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
     }
   }, []);
 
