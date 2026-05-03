@@ -209,10 +209,10 @@ export function AppSidebar() {
                 </p>
               </div>
               <DropdownMenuSeparator className="bg-border/30" />
-              <DropdownMenuItem
                 onClick={async () => {
                   await logout();
-                  window.location.href = "/login";
+                  // Gunakan replace agar history login tidak bisa di-back
+                  window.location.replace("/login");
                 }}
                 className="text-destructive focus:text-destructive cursor-pointer"
               >
