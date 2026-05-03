@@ -118,8 +118,8 @@ export default function DashboardPage() {
           delay={0.2}
         />
         <KpiCard
-          title="Rata-rata Skor Tim"
-          value={avgTeamScore}
+          title="Rata-rata Skor Organisasi"
+          value={avgOrgScore.toFixed(1)}
           icon={TrendingUp}
           trend={{ value: 3.2, label: "vs bulan lalu" }}
           delay={0.3}
