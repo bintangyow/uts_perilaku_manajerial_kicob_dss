@@ -19,6 +19,10 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  advanced: {
+    cookiePrefix: "kicob",
+    useSecureCookies: true,
+  },
   user: {
     additionalFields: {
       role: {

@@ -53,8 +53,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const cookies = [
         "better-auth.session_token",
         "__Secure-better-auth.session_token",
+        "kicob.session_token",
+        "__Secure-kicob.session_token",
         "better-auth.csrf_token",
-        "__Host-better-auth.csrf_token"
+        "kicob.csrf_token"
       ];
       
       cookies.forEach(name => {
