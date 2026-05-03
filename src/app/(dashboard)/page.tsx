@@ -35,12 +35,22 @@ export default function DashboardPage() {
   const totalEmployees = employees ? employees.filter((e) => e.status === "active").length : 0;
   const activeProjects = projects ? projects.filter((p) => p.status === "active").length : 0;
   
-  // Pending assessments: employees with no assessments yet
-  const pendingAssessments = assessments ? assessments.filter((a: any) => a.totalAssessments === 0).length : 0; 
+  // Pending assessments: employees who don't have all 3 types yet (Self, Peer, Supervisor)
+  const pendingAssessments = assessments ? assessments.filter((a: any) => a.totalAssessments < 3).length : 0; 
 
-  const bestRec = recommendations && recommendations.length > 0 ? recommendations[0] : null;
-  const avgTeamScore = bestRec ? bestRec.totalScore : 0;
-  const topCandidates = bestRec ? bestRec.members.slice(0, 5) : [];
+  // Organizational Performance: Average of all finalBehaviorScores
+  const activeScores = employees?.filter(e => e.behavioralScore).map(e => e.behavioralScore.finalBehaviorScore) || [];
+  const avgOrgScore = activeScores.length > 0 
+    ? activeScores.reduce((a, b) => a + b, 0) / activeScores.length 
+    : 0;
+
+  // Top Employees by Behavioral Score
+  const topEmployees = employees
+    ? [...employees]
+        .filter(e => e.behavioralScore)
+        .sort((a, b) => b.behavioralScore.finalBehaviorScore - a.behavioralScore.finalBehaviorScore)
+        .slice(0, 5)
+    : [];
 
   // Behavioral chart data
   const behaviorChartData = employees
@@ -56,24 +66,19 @@ export default function DashboardPage() {
         }))
     : [];
 
-  // Use team skills if available, otherwise fallback to global average
-  const radarData = bestRec && bestRec.members.length > 0 
-    ? [
-        { subject: "Hard Skill", value: (bestRec.members.reduce((s: any, m: any) => s + (m.hardSkillScore || 0), 0) / bestRec.members.length) / 20, fullMark: 5 },
-        { subject: "Soft Factor", value: (bestRec.members.reduce((s: any, m: any) => s + (m.softFactorScore || 0), 0) / bestRec.members.length) / 20, fullMark: 5 },
-        { subject: "Emosional", value: (employees?.reduce((s, e) => s + (e.behavioralScore?.avgEmotionalStability || 0), 0) / (employees?.length || 1)), fullMark: 5 },
-        { subject: "Komunikasi", value: (employees?.reduce((s, e) => s + (e.behavioralScore?.avgCommunication || 0), 0) / (employees?.length || 1)), fullMark: 5 },
-        { subject: "Kerja Tim", value: (employees?.reduce((s, e) => s + (e.behavioralScore?.avgTeamwork || 0), 0) / (employees?.length || 1)), fullMark: 5 },
-        { subject: "Adaptasi", value: (employees?.reduce((s, e) => s + (e.behavioralScore?.avgAdaptability || 0), 0) / (employees?.length || 1)), fullMark: 5 },
-      ]
-    : [
-        { subject: "Hard Skill", value: 0, fullMark: 5 },
-        { subject: "Soft Factor", value: 0, fullMark: 5 },
-        { subject: "Emosional", value: (employees?.reduce((s, e) => s + (e.behavioralScore?.avgEmotionalStability || 0), 0) / (employees?.length || 1)) || 0, fullMark: 5 },
-        { subject: "Komunikasi", value: (employees?.reduce((s, e) => s + (e.behavioralScore?.avgCommunication || 0), 0) / (employees?.length || 1)) || 0, fullMark: 5 },
-        { subject: "Kerja Tim", value: (employees?.reduce((s, e) => s + (e.behavioralScore?.avgTeamwork || 0), 0) / (employees?.length || 1)) || 0, fullMark: 5 },
-        { subject: "Adaptasi", value: (employees?.reduce((s, e) => s + (e.behavioralScore?.avgAdaptability || 0), 0) / (employees?.length || 1)) || 0, fullMark: 5 },
-      ];
+  // Organizational Average for Radar
+  const getAvg = (key: string) => {
+    const scores = employees?.filter(e => e.behavioralScore).map(e => e.behavioralScore[key]) || [];
+    return scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+  };
+
+  const radarData = [
+    { subject: "Emosional", value: getAvg("avgEmotionalStability"), fullMark: 5 },
+    { subject: "Komunikasi", value: getAvg("avgCommunication"), fullMark: 5 },
+    { subject: "Kerja Tim", value: getAvg("avgTeamwork"), fullMark: 5 },
+    { subject: "Adaptasi", value: getAvg("avgAdaptability"), fullMark: 5 },
+    { subject: "Final Score", value: avgOrgScore, fullMark: 5 },
+  ];
   
 
   return (
@@ -218,39 +223,42 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-base font-semibold">
-              Rekomendasi Tim Teratas
+              Karyawan Berperforma Terbaik
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Berdasarkan history rekomendasi proyek
+              Berdasarkan skor rata-rata perilaku (Soft Factor)
             </p>
           </div>
           <Link
-            href="/rekomendasi"
+            href="/karyawan"
             className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
           >
             Lihat Semua <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
-        {topCandidates.length > 0 ? (
+        {topEmployees.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border/20">
                   <th className="text-left text-xs font-medium text-muted-foreground py-3 px-3">
-                    #
+                    Rank
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground py-3 px-3">
                     Karyawan
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground py-3 px-3">
-                    Posisi
+                    Departemen
                   </th>
                   <th className="text-center text-xs font-medium text-muted-foreground py-3 px-3">
-                    Hard Skill
+                    ES
                   </th>
                   <th className="text-center text-xs font-medium text-muted-foreground py-3 px-3">
-                    Soft Factor
+                    CM
+                  </th>
+                  <th className="text-center text-xs font-medium text-muted-foreground py-3 px-3">
+                    TW
                   </th>
                   <th className="text-center text-xs font-medium text-muted-foreground py-3 px-3">
                     Total
@@ -258,7 +266,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {topCandidates.map((member: any, i: number) => (
+                {topEmployees.map((member: any, i: number) => (
                   <motion.tr
                     key={member.id}
                     initial={{ opacity: 0, x: -10 }}
@@ -274,36 +282,38 @@ export default function DashboardPage() {
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-sm font-semibold">
-                          {member.employeeName?.charAt(0) || "U"}
+                          {member.name?.charAt(0) || "U"}
                         </div>
                         <span className="font-medium text-sm">
-                          {member.employeeName}
+                          {member.name}
                         </span>
                       </div>
                     </td>
                     <td className="py-3 px-3 text-sm text-muted-foreground">
-                      {member.employeePosition}
+                      {member.department}
                     </td>
                     <td className="py-3 px-3 text-center">
-                      <Badge
-                        variant="secondary"
-                        className="bg-chart-1/15 text-chart-1 border-chart-1/20 font-mono text-xs"
-                      >
-                        {member.hardSkillScore?.toFixed(1) || "-"}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <Badge
-                        variant="secondary"
-                        className="bg-chart-2/15 text-chart-2 border-chart-2/20 font-mono text-xs"
-                      >
-                        {member.softFactorScore?.toFixed(1) || "-"}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <span className="text-sm font-bold text-gradient">
-                        {member.contributionScore?.toFixed(1) || "-"}
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {member.behavioralScore.avgEmotionalStability.toFixed(1)}
                       </span>
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {member.behavioralScore.avgCommunication.toFixed(1)}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {member.behavioralScore.avgTeamwork.toFixed(1)}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <Badge
+                        variant="secondary"
+                        className="bg-primary/10 text-primary border-primary/20 font-bold text-xs"
+                      >
+                        {member.behavioralScore.finalBehaviorScore.toFixed(1)}
+                      </Badge>
                     </td>
                   </motion.tr>
                 ))}
@@ -312,7 +322,7 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground text-sm border border-dashed border-border/50 rounded-xl">
-            Belum ada rekomendasi tim yang pernah di-generate.
+            Belum ada data karyawan dengan skor perilaku lengkap.
           </div>
         )}
       </motion.div>
