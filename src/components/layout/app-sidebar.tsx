@@ -210,8 +210,8 @@ export function AppSidebar() {
               </div>
               <DropdownMenuSeparator className="bg-border/30" />
               <DropdownMenuItem
-                onClick={() => {
-                  logout();
+                onClick={async () => {
+                  await logout();
                   window.location.href = "/login";
                 }}
                 className="text-destructive focus:text-destructive cursor-pointer"
