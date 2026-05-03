@@ -46,11 +46,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     try {
       await authClient.signOut();
-      // Fallback: Hapus cookie manual jika API gagal (karena masalah domain/origin)
-      document.cookie = "better-auth.session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
     } catch (e) {
       console.error("Logout failed:", e);
-      document.cookie = "better-auth.session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+    } finally {
+      // Mega-Purge: Hapus semua variasi cookie session yang mungkin ada
+      const cookies = [
+        "better-auth.session_token",
+        "__Secure-better-auth.session_token",
+        "better-auth.csrf_token",
+        "__Host-better-auth.csrf_token"
+      ];
+      
+      cookies.forEach(name => {
+        document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+        document.cookie = `${name}=; path=/; domain=${window.location.hostname}; expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+      });
+
+      // Clear local storage juga untuk jaga-jaga
+      localStorage.clear();
+      sessionStorage.clear();
     }
   }, []);
 

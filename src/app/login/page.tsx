@@ -119,9 +119,10 @@ export default function LoginPage() {
   const { login, register, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  // Redirect if already logged in
+  // Redirect if already logged in (skip if just logged out)
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
+    const isLogout = window.location.search.includes("logout=1");
+    if (!authLoading && isAuthenticated && !isLogout) {
       router.push("/");
     }
   }, [authLoading, isAuthenticated, router]);
