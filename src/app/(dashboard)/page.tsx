@@ -119,7 +119,7 @@ export default function DashboardPage() {
         />
         <KpiCard
           title="Rata-rata Skor Organisasi"
-          value={avgOrgScore.toFixed(1)}
+          value={Number(avgOrgScore.toFixed(1))}
           icon={TrendingUp}
           trend={{ value: 3.2, label: "vs bulan lalu" }}
           delay={0.3}
