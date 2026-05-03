@@ -5,7 +5,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/db";
 import { assessments, behavioralScores, employees } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -49,73 +49,109 @@ export async function POST(request: NextRequest) {
     notes,
   } = body;
 
+  const currentPeriod = period || new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date());
+
   if (!assessorName || !employeeId || !assessmentType) {
     return Response.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  // Calculate consistency score (simple avg similarity)
+  const empId = Number(employeeId);
+
+  // 1. Prevent Duplicate Assessment (Same assessor, same employee, same period)
+  const existingAss = await db
+    .select()
+    .from(assessments)
+    .where(
+      and(
+        eq(assessments.employeeId, empId),
+        eq(assessments.assessorName, assessorName),
+        eq(assessments.period, currentPeriod)
+      )
+    );
+  
+  if (existingAss.length > 0) {
+    return Response.json({ error: "Anda sudah memberikan penilaian untuk karyawan ini di periode ini." }, { status: 400 });
+  }
+
+  // 2. Calculate consistency score
   const avg = (emotionalStability + communication + teamwork + adaptability) / 4;
-  const diffs = [emotionalStability, communication, teamwork, adaptability].map(
-    (v) => Math.abs(v - avg)
-  );
+  const diffs = [emotionalStability, communication, teamwork, adaptability].map((v) => Math.abs(v - avg));
   const consistencyScore = Math.max(0, 1 - diffs.reduce((a, b) => a + b, 0) / 4);
 
   const [newAssessment] = await db
     .insert(assessments)
     .values({
       assessorName,
-      employeeId: Number(employeeId),
+      employeeId: empId,
       assessmentType,
       emotionalStability,
       communication,
       teamwork,
       adaptability,
       consistencyScore: Math.round(consistencyScore * 100) / 100,
-      period: period || "Mei 2024",
+      period: currentPeriod,
       notes: notes || null,
     })
     .returning();
 
-  // Recalculate behavioral score for employee
-  const empAssessments = await db
-    .select()
-    .from(assessments)
-    .where(eq(assessments.employeeId, Number(employeeId)));
+  // 3. Recalculate behavioral score using WEIGHTED AVERAGE
+  const empAssessments = await db.select().from(assessments).where(eq(assessments.employeeId, empId));
 
-  const count = empAssessments.length;
-  const avgES = empAssessments.reduce((s, a) => s + a.emotionalStability, 0) / count;
-  const avgCM = empAssessments.reduce((s, a) => s + a.communication, 0) / count;
-  const avgTW = empAssessments.reduce((s, a) => s + a.teamwork, 0) / count;
-  const avgAD = empAssessments.reduce((s, a) => s + a.adaptability, 0) / count;
+  const weightedCalc = {
+    supervisor: { es: 0, cm: 0, tw: 0, ad: 0, count: 0, weight: 0.5 },
+    peer: { es: 0, cm: 0, tw: 0, ad: 0, count: 0, weight: 0.3 },
+    self: { es: 0, cm: 0, tw: 0, ad: 0, count: 0, weight: 0.2 },
+  };
+
+  empAssessments.forEach((a) => {
+    const type = a.assessmentType as keyof typeof weightedCalc;
+    if (weightedCalc[type]) {
+      weightedCalc[type].es += a.emotionalStability;
+      weightedCalc[type].cm += a.communication;
+      weightedCalc[type].tw += a.teamwork;
+      weightedCalc[type].ad += a.adaptability;
+      weightedCalc[type].count++;
+    }
+  });
+
+  let totalWeight = 0;
+  let finalES = 0, finalCM = 0, finalTW = 0, finalAD = 0;
+
+  (Object.keys(weightedCalc) as Array<keyof typeof weightedCalc>).forEach((type) => {
+    const data = weightedCalc[type];
+    if (data.count > 0) {
+      finalES += (data.es / data.count) * data.weight;
+      finalCM += (data.cm / data.count) * data.weight;
+      finalTW += (data.tw / data.count) * data.weight;
+      finalAD += (data.ad / data.count) * data.weight;
+      totalWeight += data.weight;
+    }
+  });
+
+  // Normalize if not all types are present
+  const multiplier = totalWeight > 0 ? 1 / totalWeight : 0;
+  const avgES = finalES * multiplier;
+  const avgCM = finalCM * multiplier;
+  const avgTW = finalTW * multiplier;
+  const avgAD = finalAD * multiplier;
   const finalScore = (avgES + avgCM + avgTW + avgAD) / 4;
 
-  // Upsert behavioral score
-  const existing = await db
-    .select()
-    .from(behavioralScores)
-    .where(eq(behavioralScores.employeeId, Number(employeeId)));
+  // 4. Upsert behavioral score
+  const existingScore = await db.select().from(behavioralScores).where(eq(behavioralScores.employeeId, empId));
 
-  if (existing.length > 0) {
-    await db
-      .update(behavioralScores)
-      .set({
-        avgEmotionalStability: Math.round(avgES * 100) / 100,
-        avgCommunication: Math.round(avgCM * 100) / 100,
-        avgTeamwork: Math.round(avgTW * 100) / 100,
-        avgAdaptability: Math.round(avgAD * 100) / 100,
-        finalBehaviorScore: Math.round(finalScore * 100) / 100,
-        updatedAt: new Date(),
-      })
-      .where(eq(behavioralScores.employeeId, Number(employeeId)));
+  const scoreData = {
+    avgEmotionalStability: Math.round(avgES * 100) / 100,
+    avgCommunication: Math.round(avgCM * 100) / 100,
+    avgTeamwork: Math.round(avgTW * 100) / 100,
+    avgAdaptability: Math.round(avgAD * 100) / 100,
+    finalBehaviorScore: Math.round(finalScore * 100) / 100,
+    updatedAt: new Date(),
+  };
+
+  if (existingScore.length > 0) {
+    await db.update(behavioralScores).set(scoreData).where(eq(behavioralScores.employeeId, empId));
   } else {
-    await db.insert(behavioralScores).values({
-      employeeId: Number(employeeId),
-      avgEmotionalStability: Math.round(avgES * 100) / 100,
-      avgCommunication: Math.round(avgCM * 100) / 100,
-      avgTeamwork: Math.round(avgTW * 100) / 100,
-      avgAdaptability: Math.round(avgAD * 100) / 100,
-      finalBehaviorScore: Math.round(finalScore * 100) / 100,
-    });
+    await db.insert(behavioralScores).values({ employeeId: empId, ...scoreData });
   }
 
   return Response.json(newAssessment, { status: 201 });
