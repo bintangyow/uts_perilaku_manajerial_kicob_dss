@@ -105,6 +105,7 @@ export default function RekomendasiPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           projectId: activeProjectId,
+          candidateId: candidate.id,
           status,
           decisionNote: `Tim Alternatif #${candidate.ranking} ${
             status === "approved" ? "disetujui" : "ditolak"

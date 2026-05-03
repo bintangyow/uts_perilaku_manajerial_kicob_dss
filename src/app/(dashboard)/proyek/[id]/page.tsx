@@ -271,7 +271,9 @@ export default function ProyekDetailPage({
                     </div>
                     <div>
                       <h3 className="font-semibold text-sm">
-                        Alternatif Tim {candidate.ranking}
+                        {project.status === "active" || project.status === "completed" 
+                          ? "Tim Proyek Resmi" 
+                          : `Alternatif Tim ${candidate.ranking}`}
                       </h3>
                       <p className="text-xs text-muted-foreground">
                         {new Date(candidate.generatedAt).toLocaleDateString("id-ID")}
@@ -363,10 +365,10 @@ export default function ProyekDetailPage({
             >
               <Sparkles className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
               <p className="text-muted-foreground">
-                Belum ada rekomendasi tim untuk proyek ini.
+                Belum ada tim yang disetujui untuk proyek ini.
               </p>
               <p className="text-xs text-muted-foreground/60 mt-1">
-                Klik tombol &ldquo;Generate Rekomendasi Tim&rdquo; untuk memulai.
+                Silakan buka halaman &ldquo;Rekomendasi&rdquo; untuk menyetujui salah satu alternatif tim.
               </p>
             </motion.div>
           )}
