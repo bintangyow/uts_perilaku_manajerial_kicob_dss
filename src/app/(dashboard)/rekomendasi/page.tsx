@@ -16,6 +16,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SkillRadarChart } from "@/components/skill-radar-chart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -381,22 +388,30 @@ export default function RekomendasiPage() {
                                 </td>
                                 {isEditing && (
                                   <td className="py-2 px-3 text-center">
-                                    <select
-                                      value={selectedEmpId}
-                                      onChange={(e) =>
+                                    <Select
+                                      value={selectedEmpId.toString()}
+                                      onValueChange={(val) =>
                                         setPendingSwaps((prev) => ({
                                           ...prev,
-                                          [m.id]: Number(e.target.value),
+                                          [m.id]: Number(val),
                                         }))
                                       }
-                                      className="text-xs rounded-lg border border-border/30 bg-input/30 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary/50 max-w-[140px]"
                                     >
-                                      {allEmployees?.map((e: any) => (
-                                        <option key={e.id} value={e.id}>
-                                          {e.name}
-                                        </option>
-                                      ))}
-                                    </select>
+                                      <SelectTrigger className="h-8 text-[11px] rounded-lg border-border/30 bg-input/30 max-w-[140px]">
+                                        <SelectValue placeholder="Pilih karyawan" />
+                                      </SelectTrigger>
+                                      <SelectContent className="glass-card border-white/10 bg-slate-900/95 backdrop-blur-xl text-white rounded-xl">
+                                        {allEmployees?.map((e: any) => (
+                                          <SelectItem 
+                                            key={e.id} 
+                                            value={e.id.toString()}
+                                            className="focus:bg-white/10 focus:text-white cursor-pointer rounded-lg text-xs"
+                                          >
+                                            {e.name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
                                   </td>
                                 )}
                               </tr>
