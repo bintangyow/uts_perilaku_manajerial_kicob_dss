@@ -25,7 +25,6 @@ const statusConfig: Record<string, { label: string; class: string; icon: any }> 
   approved: { label: "Disetujui", class: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20", icon: CheckCircle2 },
   rejected: { label: "Ditolak", class: "bg-red-500/15 text-red-400 border-red-500/20", icon: XCircle },
   adjusted: { label: "Disesuaikan", class: "bg-yellow-500/15 text-yellow-400 border-yellow-500/20", icon: ArrowLeftRight },
-  pending: { label: "Menunggu", class: "bg-blue-500/15 text-blue-400 border-blue-500/20", icon: Loader2 },
 };
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
