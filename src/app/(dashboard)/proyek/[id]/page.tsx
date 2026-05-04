@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
+import { SkillRadarChart } from "@/components/skill-radar-chart";
 import type { ProjectStatus } from "@/lib/types";
 
 const statusConfig: Record<
@@ -288,71 +289,88 @@ export default function ProyekDetailPage({
                   </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border/20">
-                        <th className="text-left text-xs font-medium text-muted-foreground py-2 px-3">
-                          Anggota
-                        </th>
-                        <th className="text-left text-xs font-medium text-muted-foreground py-2 px-3">
-                          Posisi
-                        </th>
-                        <th className="text-center text-xs font-medium text-muted-foreground py-2 px-3">
-                          Hard Skill
-                        </th>
-                        <th className="text-center text-xs font-medium text-muted-foreground py-2 px-3">
-                          Soft Factor
-                        </th>
-                        <th className="text-center text-xs font-medium text-muted-foreground py-2 px-3">
-                          Kontribusi
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {candidate.members.map((m: any) => (
-                        <tr
-                          key={m.id}
-                          className="border-b border-border/10 hover:bg-accent/5"
-                        >
-                          <td className="py-2.5 px-3">
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center">
-                                {m.employeeName?.charAt(0) || "U"}
-                              </div>
-                              <span className="text-sm font-medium">
-                                {m.employeeName}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-2.5 px-3 text-xs text-muted-foreground">
-                            {m.employeePosition}
-                          </td>
-                          <td className="py-2.5 px-3 text-center">
-                            <Badge
-                              variant="secondary"
-                              className="text-[10px] bg-chart-1/15 text-chart-1 border-chart-1/20 font-mono"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Member List */}
+                  <div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-border/20">
+                            <th className="text-left text-[10px] font-semibold text-muted-foreground py-2 px-3 uppercase tracking-wider">
+                              Anggota
+                            </th>
+                            <th className="text-left text-[10px] font-semibold text-muted-foreground py-2 px-3 uppercase tracking-wider hidden sm:table-cell">
+                              Posisi
+                            </th>
+                            <th className="text-center text-[10px] font-semibold text-muted-foreground py-2 px-3 uppercase tracking-wider">
+                              Skor
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {candidate.members.map((m: any) => (
+                            <tr
+                              key={m.id}
+                              className="border-b border-border/10 hover:bg-accent/5 transition-colors"
                             >
-                              {m.hardSkillScore?.toFixed(1) || "-"}
-                            </Badge>
-                          </td>
-                          <td className="py-2.5 px-3 text-center">
-                            <Badge
-                              variant="secondary"
-                              className="text-[10px] bg-chart-2/15 text-chart-2 border-chart-2/20 font-mono"
-                            >
-                              {m.softFactorScore?.toFixed(1) || "-"}
-                            </Badge>
-                          </td>
-                          <td className="py-2.5 px-3 text-center">
-                            <span className="text-sm font-semibold text-gradient">
-                              {m.contributionScore?.toFixed(1) || "-"}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                              <td className="py-2.5 px-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center shrink-0">
+                                    {m.employeeName?.charAt(0) || "U"}
+                                  </div>
+                                  <span className="text-sm font-medium line-clamp-1">
+                                    {m.employeeName}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-2.5 px-3 text-xs text-muted-foreground hidden sm:table-cell">
+                                {m.employeePosition}
+                              </td>
+                              <td className="py-2.5 px-3 text-center">
+                                <span className="text-sm font-bold text-gradient">
+                                  {m.contributionScore?.toFixed(1) || "-"}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Explainability */}
+                    <div className="mt-5 p-3.5 rounded-xl bg-primary/5 border border-primary/10">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                        💡 Alasan Rekomendasi
+                      </p>
+                      <p className="text-xs text-foreground/80 leading-relaxed">
+                        Tim ini telah disahkan berdasarkan keseimbangan optimal antara hard skill{" "}
+                        <span className="text-chart-1 font-semibold">
+                          ({(project.hardSkillWeight * 100).toFixed(0)}%)
+                        </span>{" "}
+                        dan soft factor{" "}
+                        <span className="text-chart-2 font-semibold">
+                          ({(project.softFactorWeight * 100).toFixed(0)}%)
+                        </span>
+                        . Skor DSS rata-rata tim:{" "}
+                        <span className="text-primary font-semibold">{candidate.totalScore.toFixed(2)}</span>.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Visualization */}
+                  <div className="bg-slate-950/50 rounded-2xl p-4 border border-border/10 flex flex-col items-center justify-center min-h-[250px]">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-4 self-start">
+                      Distribusi Kontribusi
+                    </p>
+                    <SkillRadarChart 
+                      data={candidate.members.map((m: any) => ({
+                        subject: m.employeeName?.split(" ")[0] || "?",
+                        value: Math.min((m.contributionScore / 100) * 5, 5),
+                        fullMark: 5,
+                      }))} 
+                      height={200} 
+                    />
+                  </div>
                 </div>
               </motion.div>
             ))
