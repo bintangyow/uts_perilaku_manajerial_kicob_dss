@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
           reqs.forEach((req) => {
             const match = empSkills.find((es) => es.skillId === req.skillId);
             const level = match?.level || 0;
-            hardSkillSum += Math.min(level / req.requiredLevel, 1.2);
+            hardSkillSum += Math.min(level / req.requiredLevel, 1);
           });
           hardSkillSum = (hardSkillSum / reqs.length) * 100;
         } else {
