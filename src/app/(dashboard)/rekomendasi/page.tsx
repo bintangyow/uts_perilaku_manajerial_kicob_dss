@@ -12,7 +12,12 @@ import {
   ArrowLeftRight,
   Save,
   X,
+  Printer,
+  FileDown,
 } from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import html2canvas from "html2canvas";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SkillRadarChart } from "@/components/skill-radar-chart";
@@ -161,6 +166,101 @@ export default function RekomendasiPage() {
   const memberInSwap = (teamMemberId: number, currentEmpId: number) =>
     pendingSwaps[teamMemberId] ?? currentEmpId;
 
+  /* ─── Export: PDF ─── */
+  const handleExportPDF = async (candidate: any) => {
+    if (!proj) return;
+    
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // 1. Title & Header
+    doc.setFontSize(22);
+    doc.setTextColor(30, 41, 59); // Slate-800
+    doc.text("LAPORAN REKOMENDASI TIM", 14, 25);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Proyek: ${proj.projectName}`, 14, 33);
+    doc.text(`Dicetak pada: ${new Date().toLocaleString("id-ID")}`, 14, 38);
+    doc.setDrawColor(200);
+    doc.line(14, 42, pageWidth - 14, 42);
+
+    // 2. Project Context
+    doc.setFontSize(14);
+    doc.setTextColor(30, 41, 59);
+    doc.text("1. Konfigurasi Kebutuhan Proyek", 14, 52);
+    
+    autoTable(doc, {
+      startY: 57,
+      head: [["Kriteria Penilaian", "Bobot Kepentingan"]],
+      body: [
+        ["Hard Skill (Kompetensi Teknis)", `${(proj.hardSkillWeight * 100).toFixed(0)}%`],
+        ["Soft Factor (Perilaku & Adaptasi)", `${(proj.softFactorWeight * 100).toFixed(0)}%`],
+      ],
+      styles: { fontSize: 10, cellPadding: 5 },
+      headStyles: { fillColor: [79, 70, 229], textColor: 255 }, // Indigo-600
+    });
+
+    // 3. Recommended Team
+    const nextY = (doc as any).lastAutoTable.finalY + 15;
+    doc.text(`2. Komposisi Tim Alternatif #${candidate.ranking}`, 14, nextY);
+    doc.setFontSize(10);
+    doc.text(`Skor Gabungan (DSS Score): ${candidate.totalScore.toFixed(2)}`, 14, nextY + 7);
+    
+    const tableBody = candidate.members.map((m: any) => [
+      m.employeeName,
+      m.employeePosition,
+      m.hardSkillScore?.toFixed(1) || "-",
+      m.softFactorScore?.toFixed(1) || "-",
+      m.contributionScore?.toFixed(1) || "-",
+    ]);
+
+    autoTable(doc, {
+      startY: nextY + 12,
+      head: [["Nama Anggota", "Posisi", "Hard Skill", "Soft Factor", "Skor Akhir"]],
+      body: tableBody,
+      styles: { fontSize: 9, cellPadding: 4 },
+      headStyles: { fillColor: [51, 65, 85], textColor: 255 }, // Slate-700
+      columnStyles: {
+        2: { halign: "center" },
+        3: { halign: "center" },
+        4: { halign: "center", fontStyle: "bold" },
+      }
+    });
+
+    // 4. Visualization (Radar Chart)
+    const chartElement = document.getElementById("radar-chart-container");
+    if (chartElement) {
+      try {
+        const canvas = await html2canvas(chartElement, {
+          backgroundColor: "#020617", // slate-950 match app theme
+          logging: false,
+          scale: 2,
+        });
+        const imgData = canvas.toDataURL("image/png");
+        const imgWidth = 70;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        const chartY = (doc as any).lastAutoTable.finalY + 15;
+        if (chartY + imgHeight > 270) doc.addPage();
+        
+        doc.setFontSize(12);
+        doc.text("3. Visualisasi Kontribusi Anggota", 14, (doc as any).lastAutoTable.finalY + 10);
+        doc.addImage(imgData, "PNG", (pageWidth - imgWidth) / 2, (doc as any).lastAutoTable.finalY + 15, imgWidth, imgHeight);
+      } catch (e) {
+        console.error("Failed to capture radar chart", e);
+      }
+    }
+
+    // 5. Footer
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text("Laporan ini dihasilkan secara otomatis oleh KiCob DSS Platform berdasarkan metode SAW.", 14, 285);
+    doc.text(`Halaman 1 dari 1`, pageWidth - 30, 285);
+
+    doc.save(`Rekomendasi_Tim_${proj.projectName.replace(/\s+/g, "_")}.pdf`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -251,15 +351,17 @@ export default function RekomendasiPage() {
             transition={{ delay: 0.15 }}
             className="glass-card rounded-2xl p-5 h-fit"
           >
-            <p className="text-xs font-semibold mb-0.5">Kontribusi Anggota</p>
-            <p className="text-[10px] text-muted-foreground mb-4">Tim Alternatif #1</p>
-            {radarData.length > 2 ? (
-              <SkillRadarChart data={radarData} height={210} primaryLabel="Skor" />
-            ) : (
-              <div className="h-[210px] flex items-center justify-center text-xs text-muted-foreground border border-dashed border-border/40 rounded-xl">
-                Minimal 3 anggota untuk grafik
-              </div>
-            )}
+            <div id="radar-chart-container" className="bg-slate-950 p-2 rounded-xl">
+              <p className="text-xs font-semibold mb-0.5">Kontribusi Anggota</p>
+              <p className="text-[10px] text-muted-foreground mb-4">Tim Alternatif #1</p>
+              {radarData.length > 2 ? (
+                <SkillRadarChart data={radarData} height={210} primaryLabel="Skor" />
+              ) : (
+                <div className="h-[210px] flex items-center justify-center text-xs text-muted-foreground border border-dashed border-border/40 rounded-xl">
+                  Minimal 3 anggota untuk grafik
+                </div>
+              )}
+            </div>
             <div className="mt-4 pt-4 border-t border-border/10 space-y-3">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                 Bobot Proyek
@@ -456,6 +558,15 @@ export default function RekomendasiPage() {
                           >
                             <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
                             Setujui
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleExportPDF(c)}
+                            className="rounded-xl text-xs border-primary/30 text-primary hover:bg-primary/10"
+                          >
+                            <FileDown className="w-3.5 h-3.5 mr-1.5" />
+                            Cetak PDF
                           </Button>
                           <Button
                             size="sm"
