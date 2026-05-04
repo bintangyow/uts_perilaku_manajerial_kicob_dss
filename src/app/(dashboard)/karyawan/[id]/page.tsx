@@ -337,7 +337,8 @@ export default function KaryawanDetailPage({
               transition={{ delay: 0.2 }}
               className="glass-card rounded-2xl p-6"
             >
-              <h3 className="font-semibold mb-4">Peta Hard Skill</h3>
+              <h3 className="font-semibold mb-1">Peta Kompetensi</h3>
+              <p className="text-[10px] text-muted-foreground mb-4 italic">Visualisasi sebaran hard & soft skill</p>
               {skillRadarData.length > 2 ? (
                 <div className="h-[250px]">
                   <SkillRadarChart data={skillRadarData} />

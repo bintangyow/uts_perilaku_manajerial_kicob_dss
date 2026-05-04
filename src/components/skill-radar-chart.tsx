@@ -42,7 +42,13 @@ export function SkillRadarChart({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <RadarChart data={mergedData} cx="50%" cy="50%" outerRadius="72%">
+      <RadarChart 
+        data={mergedData} 
+        cx="50%" 
+        cy="50%" 
+        outerRadius="60%"
+        margin={{ top: 10, right: 30, bottom: 10, left: 30 }}
+      >
         <PolarGrid
           stroke="oklch(0.4 0.06 260 / 30%)"
           strokeDasharray="3 3"
