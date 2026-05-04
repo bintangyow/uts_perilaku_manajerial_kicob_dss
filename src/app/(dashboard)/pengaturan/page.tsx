@@ -25,16 +25,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -248,38 +247,42 @@ export default function PengaturanPage() {
                 Menghapus seluruh proyek, rekomendasi, dan riwayat penilaian. <b>Aksi ini tidak dapat dibatalkan.</b> (Akun pengguna tidak akan dihapus).
               </p>
               
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button 
-                    variant="destructive" 
-                    className="w-full rounded-xl"
-                    disabled={isResetting}
-                  >
-                    {isResetting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
-                    Bersihkan Semua Data
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="bg-slate-950 border-border/30">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="flex items-center gap-2">
+              <Dialog>
+                <DialogTrigger 
+                  render={
+                    <Button 
+                      variant="destructive" 
+                      className="w-full rounded-xl"
+                      disabled={isResetting}
+                    />
+                  }
+                >
+                  {isResetting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                  Bersihkan Semua Data
+                </DialogTrigger>
+                <DialogContent className="bg-slate-950 border-border/30">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
                       <AlertTriangle className="w-5 h-5 text-destructive" />
                       Apakah Anda Yakin?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
+                    </DialogTitle>
+                    <DialogDescription>
                       Tindakan ini akan menghapus seluruh data operasional (Proyek, Rekomendasi, Assessment) dari database. Akun pengguna dan master data karyawan tetap aman.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="rounded-xl border-border/30">Batal</AlertDialogCancel>
-                    <AlertDialogAction 
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter className="gap-3 sm:gap-0">
+                    <DialogClose render={<Button variant="outline" className="rounded-xl border-border/30" />}>
+                      Batal
+                    </DialogClose>
+                    <Button 
                       onClick={handleSystemReset}
                       className="rounded-xl bg-destructive hover:bg-destructive/90 text-white"
                     >
                       Ya, Bersihkan Data
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </motion.div>
         )}
