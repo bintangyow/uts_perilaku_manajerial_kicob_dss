@@ -2,9 +2,11 @@
 
 import { use, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Mail, Building2, Briefcase, Hash, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Mail, Building2, Briefcase, Hash, Plus, Trash2, Printer } from "lucide-react";
 import Link from "next/link";
 import useSWR from "swr";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -130,6 +132,114 @@ export default function KaryawanDetailPage({
     await mutateEmployee();
   };
 
+  const handlePrintReport = () => {
+    const doc = new jsPDF();
+    const primaryColor = [14, 165, 233]; // Sky blue
+
+    // 1. Header
+    doc.setFillColor(30, 41, 59);
+    doc.rect(0, 0, 210, 40, "F");
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("RAPORT KOMPETENSI KARYAWAN", 20, 20);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Dicetak pada: ${new Date().toLocaleString("id-ID")}`, 20, 30);
+
+    // 2. Personal Info
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Informasi Pribadi", 20, 55);
+    
+    autoTable(doc, {
+      startY: 60,
+      head: [["Field", "Detail"]],
+      body: [
+        ["Nama Lengkap", employee.name],
+        ["NIK / Kode", employee.employeeCode],
+        ["Posisi", employee.position],
+        ["Departemen", employee.department],
+        ["Email", employee.email],
+        ["Status", employee.status === "active" ? "Aktif" : "Nonaktif"],
+      ],
+      theme: "striped",
+      headStyles: { fillColor: primaryColor },
+      styles: { fontSize: 10 },
+    });
+
+    // 3. Behavioral Scores (Soft Factors)
+    const finalY = (doc as any).lastAutoTable.finalY + 15;
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Hasil Assessment Perilaku (Soft Factor)", 20, finalY);
+
+    if (employee.behavioralScore) {
+      autoTable(doc, {
+        startY: finalY + 5,
+        head: [["Kriteria Perilaku", "Skor (1-5)", "Keterangan"]],
+        body: [
+          ["Stabilitas Emosional", employee.behavioralScore.avgEmotionalStability.toFixed(2), "Rata-rata Gabungan"],
+          ["Komunikasi", employee.behavioralScore.avgCommunication.toFixed(2), "Rata-rata Gabungan"],
+          ["Kerja Tim", employee.behavioralScore.avgTeamwork.toFixed(2), "Rata-rata Gabungan"],
+          ["Adaptabilitas", employee.behavioralScore.avgAdaptability.toFixed(2), "Rata-rata Gabungan"],
+          ["SKOR AKHIR PERILAKU", employee.behavioralScore.finalBehaviorScore.toFixed(2), "Sangat Baik"],
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [51, 65, 85] },
+        styles: { fontSize: 10 },
+      });
+    } else {
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "italic");
+      doc.text("Belum ada data assessment perilaku.", 20, finalY + 10);
+    }
+
+    // 4. Hard Skills
+    const skillY = (doc as any).lastAutoTable?.finalY + 15 || finalY + 25;
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Daftar Hard Skill", 20, skillY);
+
+    const skillBody = (employee.skills || []).map((s: any) => [s.skillName, `Level ${s.level}`]);
+    
+    if (skillBody.length > 0) {
+      autoTable(doc, {
+        startY: skillY + 5,
+        head: [["Nama Skill", "Tingkat Penguasaan"]],
+        body: skillBody,
+        theme: "striped",
+        headStyles: { fillColor: [14, 165, 233] },
+      });
+    } else {
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "italic");
+      doc.text("Belum ada data hard skill.", 20, skillY + 10);
+    }
+
+    // Footer
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(
+        "KiCob DSS — Laporan Kompetensi Karyawan Internal",
+        105,
+        285,
+        { align: "center" }
+      );
+    }
+
+    // Open Preview
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="space-y-6">
       {/* Back button & header */}
@@ -147,12 +257,20 @@ export default function KaryawanDetailPage({
             <ArrowLeft className="w-4 h-4" />
           </Button>
         </Link>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold">Detail Karyawan</h1>
           <p className="text-sm text-muted-foreground">
             Profil dan kompetensi {employee.name}
           </p>
         </div>
+        <Button
+          onClick={handlePrintReport}
+          variant="outline"
+          className="rounded-xl border-primary/30 text-primary hover:bg-primary/10 hidden sm:flex"
+        >
+          <Printer className="w-4 h-4 mr-2" />
+          Cetak Raport
+        </Button>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
