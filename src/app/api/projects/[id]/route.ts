@@ -71,10 +71,16 @@ export async function GET(
     })
   );
 
+  // Extract official members if any (take from the first candidate for active projects)
+  const teamMembersList = candidatesWithMembers.length > 0 
+    ? candidatesWithMembers[0].members 
+    : [];
+
   return Response.json({
     ...project,
     requirements: reqs,
     teamCandidates: candidatesWithMembers,
+    teamMembers: teamMembersList
   });
 }
 
