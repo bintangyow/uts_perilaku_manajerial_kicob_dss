@@ -258,7 +258,19 @@ export default function RekomendasiPage() {
     doc.text("Laporan ini dihasilkan secara otomatis oleh KiCob DSS Platform berdasarkan metode SAW.", 14, 285);
     doc.text(`Halaman 1 dari 1`, pageWidth - 30, 285);
 
-    doc.save(`Rekomendasi_Tim_${proj.projectName.replace(/\s+/g, "_")}.pdf`);
+    // Open Preview instead of direct save
+    const blob = doc.output("blob");
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  };
+
+  const generateDetailedReason = (candidate: any) => {
+    if (!proj || !candidate.members) return "";
+
+    const avgHard = (candidate.members.reduce((acc: number, m: any) => acc + (m.hardSkillScore || 0), 0) / candidate.members.length).toFixed(1);
+    const avgSoft = (candidate.members.reduce((acc: number, m: any) => acc + (m.softFactorScore || 0), 0) / candidate.members.length).toFixed(1);
+
+    return `Komposisi tim ini direkomendasikan karena memiliki indeks kecocokan (matching rate) sebesar ${candidate.totalScore.toFixed(1)}% terhadap profil kebutuhan proyek. Seluruh anggota tim memenuhi kriteria kompetensi teknis yang dipersyaratkan dengan rata-rata skor hard skill ${avgHard}/100, didukung oleh stabilitas perilaku (soft factor) pada level ${avgSoft}/100 untuk menjamin performa kolaborasi yang optimal.`;
   };
 
   return (
@@ -530,20 +542,11 @@ export default function RekomendasiPage() {
 
                     {/* Explainability */}
                     <div className="mt-3 p-3 rounded-xl bg-primary/5 border border-primary/10">
-                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                        💡 Alasan Rekomendasi
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-2">
+                        <Sparkles className="w-3 h-3 text-primary" /> Alasan Rekomendasi (DSS Analysis)
                       </p>
-                      <p className="text-xs text-foreground/80">
-                        Tim ini dipilih berdasarkan keseimbangan optimal antara hard skill{" "}
-                        <span className="text-chart-1 font-semibold">
-                          ({(proj.hardSkillWeight * 100).toFixed(0)}%)
-                        </span>{" "}
-                        dan soft factor{" "}
-                        <span className="text-chart-2 font-semibold">
-                          ({(proj.softFactorWeight * 100).toFixed(0)}%)
-                        </span>
-                        . Skor DSS rata-rata:{" "}
-                        <span className="text-primary font-semibold">{c.totalScore.toFixed(2)}</span>.
+                      <p className="text-xs text-foreground/80 leading-relaxed">
+                        {generateDetailedReason(c)}
                       </p>
                     </div>
 
