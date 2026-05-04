@@ -35,8 +35,17 @@ export default function DashboardPage() {
   const totalEmployees = employees ? employees.filter((e) => e.status === "active").length : 0;
   const activeProjects = projects ? projects.filter((p) => p.status === "active").length : 0;
   
-  // Pending assessments: employees who don't have all 3 types yet (Self, Peer, Supervisor)
-  const pendingAssessments = assessments ? assessments.filter((a: any) => a.totalAssessments < 3).length : 0; 
+  // Current period (e.g., "Mei 2026")
+  const currentPeriod = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date());
+
+  // Pending assessments: active employees who have < 3 assessments in the CURRENT period
+  const pendingAssessments = assessments 
+    ? assessments.filter((emp: any) => {
+        if (emp.status !== 'active') return false;
+        const currentAsmts = (emp.assessments || []).filter((a: any) => a.period === currentPeriod);
+        return currentAsmts.length < 3;
+      }).length 
+    : 0;
 
   // Organizational Performance: Average of all finalBehaviorScores
   const activeScores = employees?.filter(e => e.behavioralScore).map(e => e.behavioralScore.finalBehaviorScore) || [];
