@@ -134,7 +134,7 @@ export default function KaryawanDetailPage({
 
   const handlePrintReport = () => {
     const doc = new jsPDF();
-    const primaryColor = [14, 165, 233]; // Sky blue
+    const primaryColor: [number, number, number] = [14, 165, 233]; // Sky blue
 
     // 1. Header
     doc.setFillColor(30, 41, 59);
@@ -189,7 +189,7 @@ export default function KaryawanDetailPage({
           ["SKOR AKHIR PERILAKU", employee.behavioralScore.finalBehaviorScore.toFixed(2), "Sangat Baik"],
         ],
         theme: "grid",
-        headStyles: { fillColor: [51, 65, 85] },
+        headStyles: { fillColor: [51, 65, 85] as [number, number, number] },
         styles: { fontSize: 10 },
       });
     } else {
