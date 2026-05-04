@@ -322,7 +322,7 @@ export default function KaryawanDetailPage({
             <div className="flex items-center gap-3 text-sm">
               <Briefcase className="w-4 h-4 text-muted-foreground" />
               <span className="text-muted-foreground">Total Proyek:</span>
-              <span>0 (Belum Terintegrasi)</span>
+              <span className="font-semibold">{employee.totalProjects || 0} Proyek</span>
             </div>
           </div>
         </motion.div>

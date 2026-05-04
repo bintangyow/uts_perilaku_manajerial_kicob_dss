@@ -4,8 +4,8 @@
 
 import { NextRequest } from "next/server";
 import { db } from "@/db";
-import { employees, employeeSkills, skills, behavioralScores, assessments } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { employees, employeeSkills, skills, behavioralScores, assessments, teamMembers, teamCandidates, projects } from "@/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 
 export async function GET(
   _request: NextRequest,
@@ -22,6 +22,19 @@ export async function GET(
   if (!employee) {
     return Response.json({ error: "Employee not found" }, { status: 404 });
   }
+
+  // Calculate Total Projects (Active/Completed)
+  const empProjects = await db
+    .select({ id: projects.id })
+    .from(teamMembers)
+    .innerJoin(teamCandidates, eq(teamMembers.teamCandidateId, teamCandidates.id))
+    .innerJoin(projects, eq(teamCandidates.projectId, projects.id))
+    .where(
+      and(
+        eq(teamMembers.employeeId, empId),
+        inArray(projects.status, ["active", "completed"])
+      )
+    );
 
   const empSkills = await db
     .select({
@@ -51,6 +64,7 @@ export async function GET(
     skills: empSkills,
     behavioralScore: scores[0] ?? null,
     assessments: empAssessments,
+    totalProjects: empProjects.length,
   });
 }
 
