@@ -492,17 +492,17 @@ export default function RekomendasiPage() {
                                 </td>
                                 <td className="py-2.5 px-3 text-center">
                                   <Badge variant="secondary" className="text-[10px] bg-chart-1/15 text-chart-1 border-chart-1/20 font-mono">
-                                    {m.hardSkillScore?.toFixed(1) ?? "-"}
+                                    {Math.min(m.hardSkillScore || 0, 100).toFixed(1)}
                                   </Badge>
                                 </td>
                                 <td className="py-2.5 px-3 text-center">
                                   <Badge variant="secondary" className="text-[10px] bg-chart-2/15 text-chart-2 border-chart-2/20 font-mono">
-                                    {m.softFactorScore?.toFixed(1) ?? "-"}
+                                    {Math.min(m.softFactorScore || 0, 100).toFixed(1)}
                                   </Badge>
                                 </td>
                                 <td className="py-2.5 px-3 text-center">
                                   <span className="text-sm font-bold text-gradient">
-                                    {m.contributionScore?.toFixed(1) ?? "-"}
+                                    {Math.min(m.contributionScore || 0, 100).toFixed(1)}
                                   </span>
                                 </td>
                                 {isEditing && (

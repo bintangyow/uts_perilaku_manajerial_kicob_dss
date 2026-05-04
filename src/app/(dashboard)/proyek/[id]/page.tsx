@@ -66,9 +66,11 @@ export default function ProyekDetailPage({
 
   const generateDetailedReason = (members: any[]) => {
     if (!project || !members || members.length === 0) return "";
-    const avgHard = (members.reduce((acc: number, m: any) => acc + (m.hardSkillScore || 0), 0) / members.length).toFixed(1);
-    const avgSoft = (members.reduce((acc: number, m: any) => acc + (m.softFactorScore || 0), 0) / members.length).toFixed(1);
-    const avgTotal = (members.reduce((acc: number, m: any) => acc + (m.contributionScore || 0), 0) / members.length).toFixed(1);
+    
+    // Ensure each score is capped at 100 before averaging
+    const avgHard = (members.reduce((acc: number, m: any) => acc + Math.min(m.hardSkillScore || 0, 100), 0) / members.length).toFixed(1);
+    const avgSoft = (members.reduce((acc: number, m: any) => acc + Math.min(m.softFactorScore || 0, 100), 0) / members.length).toFixed(1);
+    const avgTotal = (members.reduce((acc: number, m: any) => acc + Math.min(m.contributionScore || 0, 100), 0) / members.length).toFixed(1);
 
     return `Tim ini telah disahkan dengan indeks kecocokan rata-rata ${avgTotal}% terhadap profil kebutuhan proyek. Seluruh anggota memenuhi kriteria kompetensi teknis dengan rata-rata skor hard skill ${avgHard}/100, didukung oleh stabilitas perilaku (soft factor) pada level ${avgSoft}/100 untuk menjamin performa kolaborasi yang berkelanjutan.`;
   };
@@ -105,7 +107,11 @@ export default function ProyekDetailPage({
     doc.text("Komposisi Anggota Tim", 20, nextY);
     
     const tableBody = (project.teamMembers || []).map((m: any) => [
-      m.employeeName, m.employeePosition, m.hardSkillScore?.toFixed(1) || "-", m.softFactorScore?.toFixed(1) || "-", m.contributionScore?.toFixed(1) || "-",
+      m.employeeName, 
+      m.employeePosition, 
+      Math.min(m.hardSkillScore || 0, 100).toFixed(1), 
+      Math.min(m.softFactorScore || 0, 100).toFixed(1), 
+      Math.min(m.contributionScore || 0, 100).toFixed(1),
     ]);
 
     autoTable(doc, {
@@ -259,13 +265,19 @@ export default function ProyekDetailPage({
                           </td>
                           <td className="py-3 px-4 text-muted-foreground text-xs hidden sm:table-cell">{member.employeePosition}</td>
                           <td className="py-3 px-4 text-center">
-                            <Badge variant="secondary" className="bg-chart-1/10 text-chart-1 border-chart-1/20 text-[10px]">{member.hardSkillScore?.toFixed(1) || "-"}</Badge>
+                            <Badge variant="secondary" className="bg-chart-1/10 text-chart-1 border-chart-1/20 text-[10px]">
+                              {Math.min(member.hardSkillScore || 0, 100).toFixed(1)}
+                            </Badge>
                           </td>
                           <td className="py-3 px-4 text-center">
-                            <Badge variant="secondary" className="bg-chart-2/10 text-chart-2 border-chart-2/20 text-[10px]">{member.softFactorScore?.toFixed(1) || "-"}</Badge>
+                            <Badge variant="secondary" className="bg-chart-2/10 text-chart-2 border-chart-2/20 text-[10px]">
+                              {Math.min(member.softFactorScore || 0, 100).toFixed(1)}
+                            </Badge>
                           </td>
                           <td className="py-3 px-4 text-center">
-                            <span className="font-bold text-gradient">{member.contributionScore?.toFixed(1)}</span>
+                            <span className="font-bold text-gradient">
+                              {Math.min(member.contributionScore || 0, 100).toFixed(1)}
+                            </span>
                           </td>
                         </tr>
                       ))}
