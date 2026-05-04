@@ -47,9 +47,10 @@ export default function RekomendasiPage() {
     fetcher
   );
 
+  const openProjects = (projects ?? []).filter((p) => p.status === "draft");
   const activeProjectId =
-    selectedProject || (projects && projects.length > 0 ? projects[0].id : null);
-  const proj = projects?.find((p) => p.id === activeProjectId) ?? null;
+    selectedProject || (openProjects.length > 0 ? openProjects[0].id : null);
+  const proj = openProjects.find((p) => p.id === activeProjectId) ?? null;
   const candidates = (allCandidates ?? [])
     .filter((c) => c.projectId === activeProjectId && !dismissed.has(c.id))
     .sort((a, b) => a.ranking - b.ranking);
@@ -121,6 +122,10 @@ export default function RekomendasiPage() {
       });
       if (res.ok) {
         await mutate("/api/recommendations");
+        if (status === "approved") {
+          await mutate("/api/projects");
+          setSelectedProject(null);
+        }
       }
     } catch (e) {
       console.error("Decision failed:", e);
@@ -197,8 +202,8 @@ export default function RekomendasiPage() {
       >
         {projectsLoading ? (
           <p className="text-sm text-muted-foreground">Memuat proyek...</p>
-        ) : projects && projects.length > 0 ? (
-          projects.map((p) => (
+        ) : openProjects.length > 0 ? (
+          openProjects.map((p) => (
             <Button
               key={p.id}
               size="sm"
