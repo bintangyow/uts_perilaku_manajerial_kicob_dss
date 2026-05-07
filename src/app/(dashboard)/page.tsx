@@ -48,7 +48,7 @@ export default function DashboardPage() {
     : 0;
 
   // Organizational Performance: Average of all finalBehaviorScores
-  const activeScores = employees?.filter(e => e.behavioralScore).map(e => e.behavioralScore.finalBehaviorScore) || [];
+  const activeScores = employees?.filter(e => e.behavioralScore).map(e => Number(e.behavioralScore.finalBehaviorScore)) || [];
   const avgOrgScore = activeScores.length > 0 
     ? activeScores.reduce((a, b) => a + b, 0) / activeScores.length 
     : 0;
@@ -57,7 +57,7 @@ export default function DashboardPage() {
   const topEmployees = employees
     ? [...employees]
         .filter(e => e.behavioralScore)
-        .sort((a, b) => b.behavioralScore.finalBehaviorScore - a.behavioralScore.finalBehaviorScore)
+        .sort((a, b) => Number(b.behavioralScore.finalBehaviorScore) - Number(a.behavioralScore.finalBehaviorScore))
         .slice(0, 5)
     : [];
 
@@ -68,16 +68,16 @@ export default function DashboardPage() {
         .slice(0, 8)
         .map((e) => ({
           name: e.name.split(" ")[0],
-          "Emosional": e.behavioralScore.avgEmotionalStability,
-          "Komunikasi": e.behavioralScore.avgCommunication,
-          "Kerja Tim": e.behavioralScore.avgTeamwork,
-          "Adaptasi": e.behavioralScore.avgAdaptability,
+          "Emosional": Number(e.behavioralScore.avgEmotionalStability),
+          "Komunikasi": Number(e.behavioralScore.avgCommunication),
+          "Kerja Tim": Number(e.behavioralScore.avgTeamwork),
+          "Adaptasi": Number(e.behavioralScore.avgAdaptability),
         }))
     : [];
 
   // Organizational Average for Radar
   const getAvg = (key: string) => {
-    const scores = employees?.filter(e => e.behavioralScore).map(e => e.behavioralScore[key]) || [];
+    const scores = employees?.filter(e => e.behavioralScore).map(e => Number(e.behavioralScore[key])) || [];
     return scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
   };
 
@@ -303,17 +303,17 @@ export default function DashboardPage() {
                     </td>
                     <td className="py-3 px-3 text-center">
                       <span className="text-xs text-muted-foreground font-mono">
-                        {member.behavioralScore.avgEmotionalStability.toFixed(1)}
+                        {Number(member.behavioralScore.avgEmotionalStability).toFixed(1)}
                       </span>
                     </td>
                     <td className="py-3 px-3 text-center">
                       <span className="text-xs text-muted-foreground font-mono">
-                        {member.behavioralScore.avgCommunication.toFixed(1)}
+                        {Number(member.behavioralScore.avgCommunication).toFixed(1)}
                       </span>
                     </td>
                     <td className="py-3 px-3 text-center">
                       <span className="text-xs text-muted-foreground font-mono">
-                        {member.behavioralScore.avgTeamwork.toFixed(1)}
+                        {Number(member.behavioralScore.avgTeamwork).toFixed(1)}
                       </span>
                     </td>
                     <td className="py-3 px-3 text-center">
@@ -321,7 +321,7 @@ export default function DashboardPage() {
                         variant="secondary"
                         className="bg-primary/10 text-primary border-primary/20 font-bold text-xs"
                       >
-                        {member.behavioralScore.finalBehaviorScore.toFixed(1)}
+                        {Number(member.behavioralScore.finalBehaviorScore).toFixed(1)}
                       </Badge>
                     </td>
                   </motion.tr>

@@ -4,7 +4,7 @@
 
 import { NextRequest } from "next/server";
 import { db } from "@/db";
-import { employees, employeeSkills, skills, behavioralScores, assessments, teamMembers, teamCandidates, projects } from "@/db/schema";
+import { employees, employeeSkills, skills, behavioralScores, assessments, teamMembers, teamCandidates, projects, user } from "@/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 
 export async function GET(
@@ -15,8 +15,19 @@ export async function GET(
   const empId = Number(id);
 
   const [employee] = await db
-    .select()
+    .select({
+      id: employees.id,
+      userId: employees.userId,
+      employeeCode: employees.employeeCode,
+      department: employees.department,
+      position: employees.position,
+      jobLevel: employees.jobLevel,
+      status: employees.status,
+      name: user.name,
+      email: user.email,
+    })
     .from(employees)
+    .leftJoin(user, eq(employees.userId, user.id))
     .where(eq(employees.id, empId));
 
   if (!employee) {

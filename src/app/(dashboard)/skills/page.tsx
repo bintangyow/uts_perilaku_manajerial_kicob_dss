@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import useSWR from "swr";
 import { Plus, Search, Filter, Pencil, Trash2 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function SkillsPage() {
+  const { currentUser } = useAuth();
   const { data: skills, mutate, isLoading } = useSWR<any[]>("/api/skills", fetcher);
 
   const [search, setSearch] = useState("");
@@ -38,6 +40,7 @@ export default function SkillsPage() {
   const [formName, setFormName] = useState("");
   const [formCategory, setFormCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const filtered = skills
     ? skills.filter((s) => {
@@ -52,8 +55,9 @@ export default function SkillsPage() {
   const handleAddSkill = async () => {
     if (!formName || !formCategory) return;
     setIsSubmitting(true);
+    setErrorMsg("");
 
-    await fetch("/api/skills", {
+    const res = await fetch("/api/skills", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -61,6 +65,14 @@ export default function SkillsPage() {
         category: formCategory === "Hard Skill" ? "hard" : "soft",
       }),
     });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setErrorMsg(data.error || "Gagal menyimpan skill.");
+      setIsSubmitting(false);
+      return;
+    }
 
     await mutate();
 
@@ -93,70 +105,69 @@ export default function SkillsPage() {
           </p>
         </div>
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger
-            render={
-              <Button className="glow-button text-white rounded-xl h-10 w-fit" />
-            }
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Tambah Skill
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-sm bg-[oklch(0.14_0.04_260)] border-border/30">
-            <DialogHeader>
-              <DialogTitle>Tambah Skill Baru</DialogTitle>
-              <DialogDescription>
-                Tambahkan skill baru ke dalam database kompetensi.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 mt-2">
-              <div className="space-y-2">
-                <Label htmlFor="skill-name">Nama Skill</Label>
-                <Input
-                  id="skill-name"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  placeholder="Contoh: ReactJS"
-                  className="bg-input/30 border-border/30 rounded-xl"
-                />
+        {(currentUser?.role === "admin" || currentUser?.role === "hr") && (
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) setErrorMsg("");
+          }}>
+            <DialogTrigger className="glow-button text-white rounded-xl h-10 px-4 flex items-center justify-center w-fit text-sm font-medium">
+              <Plus className="w-4 h-4 mr-2" />
+              Tambah Skill
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-sm bg-[oklch(0.14_0.04_260)] border-border/30">
+              <DialogHeader>
+                <DialogTitle>Tambah Skill Baru</DialogTitle>
+                <DialogDescription>
+                  Tambahkan skill baru ke dalam database kompetensi.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 mt-2">
+                {errorMsg && (
+                  <div className="bg-red-500/15 text-red-400 border border-red-500/20 px-3 py-2 rounded-xl text-xs">
+                    {errorMsg}
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="skill-name">Nama Skill</Label>
+                  <Input
+                    id="skill-name"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    placeholder="Contoh: ReactJS"
+                    className="bg-input/30 border-border/30 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Kategori</Label>
+                  <Select
+                    value={formCategory}
+                    onValueChange={(v) => v && setFormCategory(v)}
+                  >
+                    <SelectTrigger className="h-10 bg-input/30 border-border/30 rounded-xl">
+                      <SelectValue placeholder="Pilih kategori..." />
+                    </SelectTrigger>
+                    <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)]">
+                      <SelectItem value="Hard Skill">Hard Skill</SelectItem>
+                      <SelectItem value="Soft Skill">Soft Skill</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <DialogClose className="rounded-xl border border-border/30 h-10 px-4 hover:bg-white/5 transition-colors text-sm font-medium">
+                    Batal
+                  </DialogClose>
+                  <Button
+                    onClick={handleAddSkill}
+                    disabled={!formName || !formCategory || isSubmitting}
+                    className="flex-1 glow-button text-white rounded-xl font-semibold"
+                  >
+                    {isSubmitting ? "Menyimpan..." : "Simpan Skill"}
+                  </Button>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Kategori</Label>
-                <Select
-                  value={formCategory}
-                  onValueChange={(v) => v && setFormCategory(v)}
-                >
-                  <SelectTrigger className="h-10 bg-input/30 border-border/30 rounded-xl">
-                    <SelectValue placeholder="Pilih kategori..." />
-                  </SelectTrigger>
-                  <SelectContent className="border-border/30">
-                    <SelectItem value="Hard Skill">Hard Skill</SelectItem>
-                    <SelectItem value="Soft Skill">Soft Skill</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <DialogClose
-                  render={
-                    <Button
-                      variant="outline"
-                      className="rounded-xl border-border/30"
-                    />
-                  }
-                >
-                  Batal
-                </DialogClose>
-                <Button
-                  onClick={handleAddSkill}
-                  disabled={!formName || !formCategory || isSubmitting}
-                  className="flex-1 glow-button text-white rounded-xl font-semibold"
-                >
-                  {isSubmitting ? "Menyimpan..." : "Simpan Skill"}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        )}
       </motion.div>
 
       {/* Filters */}
@@ -234,14 +245,16 @@ export default function SkillsPage() {
                       </Badge>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteSkill(skill.id)}
-                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0 ml-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {(currentUser?.role === "admin" || currentUser?.role === "hr") && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteSkill(skill.id)}
+                          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0 ml-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </td>
                   </motion.tr>
                 ))}

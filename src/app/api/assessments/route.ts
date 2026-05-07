@@ -1,10 +1,6 @@
-// ============================================================
-// KiCob — Assessments API Route Handler
-// ============================================================
-
 import { NextRequest } from "next/server";
 import { db } from "@/db";
-import { assessments, behavioralScores, employees } from "@/db/schema";
+import { assessments, behavioralScores, employees, user } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
@@ -19,8 +15,21 @@ export async function GET(request: NextRequest) {
     return Response.json(result);
   }
 
-  // Return assessments grouped by employee
-  const allEmployees = await db.select().from(employees);
+  // Return assessments grouped by employee, joined with user for names
+  const allEmployees = await db
+    .select({
+      id: employees.id,
+      userId: employees.userId,
+      employeeCode: employees.employeeCode,
+      department: employees.department,
+      position: employees.position,
+      status: employees.status,
+      name: user.name,
+      email: user.email,
+    })
+    .from(employees)
+    .leftJoin(user, eq(employees.userId, user.id));
+
   const allAssessments = await db.select().from(assessments);
 
   const grouped = allEmployees.map((emp) => {
@@ -84,11 +93,11 @@ export async function POST(request: NextRequest) {
       assessorName,
       employeeId: empId,
       assessmentType,
-      emotionalStability,
-      communication,
-      teamwork,
-      adaptability,
-      consistencyScore: Math.round(consistencyScore * 100) / 100,
+      emotionalStability: emotionalStability.toString(),
+      communication: communication.toString(),
+      teamwork: teamwork.toString(),
+      adaptability: adaptability.toString(),
+      consistencyScore: (Math.round(consistencyScore * 100) / 100).toString(),
       period: currentPeriod,
       notes: notes || null,
     })
@@ -106,10 +115,10 @@ export async function POST(request: NextRequest) {
   empAssessments.forEach((a) => {
     const type = a.assessmentType as keyof typeof weightedCalc;
     if (weightedCalc[type]) {
-      weightedCalc[type].es += a.emotionalStability;
-      weightedCalc[type].cm += a.communication;
-      weightedCalc[type].tw += a.teamwork;
-      weightedCalc[type].ad += a.adaptability;
+      weightedCalc[type].es += Number(a.emotionalStability);
+      weightedCalc[type].cm += Number(a.communication);
+      weightedCalc[type].tw += Number(a.teamwork);
+      weightedCalc[type].ad += Number(a.adaptability);
       weightedCalc[type].count++;
     }
   });
@@ -140,11 +149,11 @@ export async function POST(request: NextRequest) {
   const existingScore = await db.select().from(behavioralScores).where(eq(behavioralScores.employeeId, empId));
 
   const scoreData = {
-    avgEmotionalStability: Math.round(avgES * 100) / 100,
-    avgCommunication: Math.round(avgCM * 100) / 100,
-    avgTeamwork: Math.round(avgTW * 100) / 100,
-    avgAdaptability: Math.round(avgAD * 100) / 100,
-    finalBehaviorScore: Math.round(finalScore * 100) / 100,
+    avgEmotionalStability: avgES.toFixed(2),
+    avgCommunication: avgCM.toFixed(2),
+    avgTeamwork: avgTW.toFixed(2),
+    avgAdaptability: avgAD.toFixed(2),
+    finalBehaviorScore: finalScore.toFixed(2),
     updatedAt: new Date(),
   };
 

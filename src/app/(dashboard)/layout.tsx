@@ -44,7 +44,12 @@ export default function DashboardLayout({
 
   // Build breadcrumb
   const segments = pathname.split("/").filter(Boolean);
-  const breadcrumbItems = segments.map((seg) => pathLabels[seg] || seg);
+  const breadcrumbItems = segments.map((seg) => {
+    if (pathLabels[seg]) return pathLabels[seg];
+    // If segment is a number (ID), show "Detail" instead of the raw number
+    if (!isNaN(Number(seg))) return "Detail";
+    return seg.charAt(0).toUpperCase() + seg.slice(1);
+  });
 
   return (
     <SidebarProvider>

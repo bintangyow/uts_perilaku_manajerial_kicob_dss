@@ -9,8 +9,9 @@ import {
   integer,
   boolean,
   timestamp,
-  real,
+  numeric,
   varchar,
+  unique,
 } from "drizzle-orm/pg-core";
 
 // ─── Better Auth Managed Tables ─────────────────────────────
@@ -73,10 +74,9 @@ export const employees = pgTable("employees", {
   id: serial("id").primaryKey(),
   userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
   employeeCode: varchar("employee_code", { length: 20 }).notNull().unique(),
-  name: text("name").notNull(),
-  email: text("email").notNull(),
   department: text("department").notNull(),
   position: text("position").notNull(),
+  jobLevel: integer("job_level").notNull().default(1), // 1: Staff, 2: Supervisor, 3: Manager, 4: Director
   status: text("status").notNull().default("active"), // active | inactive
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -87,16 +87,20 @@ export const skills = pgTable("skills", {
   category: text("category").notNull(), // hard | soft
 });
 
-export const employeeSkills = pgTable("employee_skills", {
-  id: serial("id").primaryKey(),
-  employeeId: integer("employee_id")
-    .notNull()
-    .references(() => employees.id, { onDelete: "cascade" }),
-  skillId: integer("skill_id")
-    .notNull()
-    .references(() => skills.id, { onDelete: "cascade" }),
-  level: integer("level").notNull().default(1), // 1-5
-});
+export const employeeSkills = pgTable(
+  "employee_skills",
+  {
+    id: serial("id").primaryKey(),
+    employeeId: integer("employee_id")
+      .notNull()
+      .references(() => employees.id, { onDelete: "cascade" }),
+    skillId: integer("skill_id")
+      .notNull()
+      .references(() => skills.id, { onDelete: "cascade" }),
+    level: integer("level").notNull().default(1), // 1-5
+  },
+  (t) => [unique("unique_employee_skill").on(t.employeeId, t.skillId)]
+);
 
 export const assessments = pgTable("assessments", {
   id: serial("id").primaryKey(),
@@ -105,12 +109,14 @@ export const assessments = pgTable("assessments", {
     .notNull()
     .references(() => employees.id, { onDelete: "cascade" }),
   assessmentType: text("assessment_type").notNull(), // self | peer | supervisor
-  emotionalStability: real("emotional_stability").notNull(),
-  communication: real("communication").notNull(),
-  teamwork: real("teamwork").notNull(),
-  adaptability: real("adaptability").notNull(),
-  consistencyScore: real("consistency_score").notNull().default(0),
-  period: text("period").notNull().default("Mei 2024"),
+  emotionalStability: numeric("emotional_stability", { precision: 5, scale: 2 }).notNull(),
+  communication: numeric("communication", { precision: 5, scale: 2 }).notNull(),
+  teamwork: numeric("teamwork", { precision: 5, scale: 2 }).notNull(),
+  adaptability: numeric("adaptability", { precision: 5, scale: 2 }).notNull(),
+  consistencyScore: numeric("consistency_score", { precision: 5, scale: 2 })
+    .notNull()
+    .default("0"),
+  period: text("period").notNull(), // e.g., "Mei 2026"
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -120,67 +126,79 @@ export const behavioralScores = pgTable("behavioral_scores", {
   employeeId: integer("employee_id")
     .notNull()
     .references(() => employees.id, { onDelete: "cascade" }),
-  avgEmotionalStability: real("avg_emotional_stability").notNull(),
-  avgCommunication: real("avg_communication").notNull(),
-  avgTeamwork: real("avg_teamwork").notNull(),
-  avgAdaptability: real("avg_adaptability").notNull(),
-  finalBehaviorScore: real("final_behavior_score").notNull(),
+  avgEmotionalStability: numeric("avg_emotional_stability", { precision: 5, scale: 2 }).notNull(),
+  avgCommunication: numeric("avg_communication", { precision: 5, scale: 2 }).notNull(),
+  avgTeamwork: numeric("avg_teamwork", { precision: 5, scale: 2 }).notNull(),
+  avgAdaptability: numeric("avg_adaptability", { precision: 5, scale: 2 }).notNull(),
+  finalBehaviorScore: numeric("final_behavior_score", { precision: 5, scale: 2 }).notNull(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
-  createdBy: text("created_by").references(() => user.id),
+  createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
   projectName: text("project_name").notNull(),
   description: text("description").notNull().default(""),
   teamSize: integer("team_size").notNull().default(3),
-  hardSkillWeight: real("hard_skill_weight").notNull().default(0.6),
-  softFactorWeight: real("soft_factor_weight").notNull().default(0.4),
+  hardSkillWeight: numeric("hard_skill_weight", { precision: 3, scale: 2 })
+    .notNull()
+    .default("0.60"),
+  softFactorWeight: numeric("soft_factor_weight", { precision: 3, scale: 2 })
+    .notNull()
+    .default("0.40"),
   status: text("status").notNull().default("draft"), // draft | active | completed
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const projectRequirements = pgTable("project_requirements", {
-  id: serial("id").primaryKey(),
-  projectId: integer("project_id")
-    .notNull()
-    .references(() => projects.id, { onDelete: "cascade" }),
-  skillId: integer("skill_id")
-    .notNull()
-    .references(() => skills.id, { onDelete: "cascade" }),
-  requiredLevel: integer("required_level").notNull().default(3),
-  isMandatory: boolean("is_mandatory").notNull().default(false),
-});
+export const projectRequirements = pgTable(
+  "project_requirements",
+  {
+    id: serial("id").primaryKey(),
+    projectId: integer("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    skillId: integer("skill_id")
+      .notNull()
+      .references(() => skills.id, { onDelete: "cascade" }),
+    requiredLevel: integer("required_level").notNull().default(3),
+    isMandatory: boolean("is_mandatory").notNull().default(false),
+  },
+  (t) => [unique("unique_project_requirement").on(t.projectId, t.skillId)]
+);
 
 export const teamCandidates = pgTable("team_candidates", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
-  totalScore: real("total_score").notNull(),
+  totalScore: numeric("total_score", { precision: 5, scale: 2 }).notNull(),
   ranking: integer("ranking").notNull(),
   generatedAt: timestamp("generated_at").notNull().defaultNow(),
 });
 
-export const teamMembers = pgTable("team_members", {
-  id: serial("id").primaryKey(),
-  teamCandidateId: integer("team_candidate_id")
-    .notNull()
-    .references(() => teamCandidates.id, { onDelete: "cascade" }),
-  employeeId: integer("employee_id")
-    .notNull()
-    .references(() => employees.id, { onDelete: "cascade" }),
-  contributionScore: real("contribution_score").notNull(),
-  hardSkillScore: real("hard_skill_score"),
-  softFactorScore: real("soft_factor_score"),
-});
+export const teamMembers = pgTable(
+  "team_members",
+  {
+    id: serial("id").primaryKey(),
+    teamCandidateId: integer("team_candidate_id")
+      .notNull()
+      .references(() => teamCandidates.id, { onDelete: "cascade" }),
+    employeeId: integer("employee_id")
+      .notNull()
+      .references(() => employees.id, { onDelete: "cascade" }),
+    contributionScore: numeric("contribution_score", { precision: 5, scale: 2 }).notNull(),
+    hardSkillScore: numeric("hard_skill_score", { precision: 5, scale: 2 }),
+    softFactorScore: numeric("soft_factor_score", { precision: 5, scale: 2 }),
+  },
+  (t) => [unique("unique_team_candidate_member").on(t.teamCandidateId, t.employeeId)]
+);
 
 export const recommendationHistory = pgTable("recommendation_history", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
-  approvedBy: text("approved_by").references(() => user.id),
+  approvedBy: text("approved_by").references(() => user.id, { onDelete: "set null" }),
   decisionNote: text("decision_note").notNull().default(""),
   status: text("status").notNull().default("pending"), // approved | rejected | adjusted | pending
   createdAt: timestamp("created_at").notNull().defaultNow(),

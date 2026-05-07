@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Save, RotateCcw } from "lucide-react";
 import Link from "next/link";
@@ -28,11 +28,19 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   const { currentUser } = useAuth();
   
   const { data: emp, isLoading } = useSWR<any>(`/api/employees/${id}`, fetcher);
+  const { data: allEmployees } = useSWR<any[]>("/api/employees", fetcher);
   
+  const isSelf = emp?.userId === currentUser?.id;
+  const currentUserEmp = allEmployees?.find(e => e.userId === currentUser?.id);
+  
+  const assessorLevel = currentUserEmp?.jobLevel || 1;
+  const targetLevel = emp?.jobLevel || 1;
+  const isSuperior = assessorLevel > targetLevel;
+
   // Logic to determine initial type and allowed types based on role
   const getInitialType = () => {
-    if (currentUser?.role === "manager") return "supervisor";
-    if (emp?.userId === currentUser?.id) return "self";
+    if (isSelf) return "self";
+    if (isSuperior) return "supervisor";
     return "peer";
   };
 
@@ -65,9 +73,11 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
   );
 
   // Set initial type once data is loaded
-  useState(() => {
-    if (emp) setType(getInitialType());
-  });
+  useEffect(() => {
+    if (emp && !isLoading) {
+      setType(getInitialType());
+    }
+  }, [emp, isLoading, currentUser, allEmployees]);
 
   if (isLoading) {
     return (
@@ -113,7 +123,13 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
         setTimeout(() => {
           router.push("/assessment");
         }, 1500);
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || "Gagal menyimpan assessment. Silakan coba lagi.");
       }
+    } catch (error) {
+      console.error("Error submitting assessment:", error);
+      alert("Terjadi kesalahan koneksi. Silakan cek jaringan Anda.");
     } finally {
       setIsSubmitting(false);
     }
@@ -137,7 +153,12 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-5 flex items-center gap-4">
         <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center text-primary text-lg font-bold">{emp.name.charAt(0)}</div>
-        <div className="flex-1"><h3 className="font-semibold">{emp.name}</h3><p className="text-xs text-muted-foreground">{emp.position} — {emp.department}</p></div>
+        <div className="flex-1">
+          <h3 className="font-semibold">{emp.name}</h3>
+          <p className="text-xs text-muted-foreground">
+            {emp.position} (Level {emp.jobLevel}) — {emp.department}
+          </p>
+        </div>
         <div className="text-right"><p className="text-xs text-muted-foreground">Rata-rata</p><p className="text-xl font-bold text-gradient">{avg.toFixed(1)}</p></div>
       </motion.div>
 
@@ -145,22 +166,42 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card rounded-2xl p-5">
           <label className="text-sm font-medium mb-2 block">Tipe Assessment</label>
           <Select value={type} onValueChange={(v) => v && setType(v)}>
-            <SelectTrigger className="h-10 bg-input/30 border-border/30 rounded-xl"><SelectValue /></SelectTrigger>
-            <SelectContent className="border-border/30">
-              {(currentUser?.role === "admin" || currentUser?.role === "hr" || emp?.userId === currentUser?.id) && (
-                <SelectItem value="self">Self Assessment</SelectItem>
-              )}
-              {(currentUser?.role === "admin" || currentUser?.role === "hr" || currentUser?.role === "reviewer" || currentUser?.role === "manager") && (
-                <SelectItem value="peer">Peer Assessment</SelectItem>
-              )}
-              {(currentUser?.role === "admin" || currentUser?.role === "hr" || currentUser?.role === "manager") && (
-                <SelectItem value="supervisor">Supervisor Assessment</SelectItem>
+            <SelectTrigger className="min-h-[44px] h-auto bg-input/30 border-border/30 rounded-xl px-4 py-2.5 text-left flex items-center justify-between w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)] min-w-[240px]">
+              {/* Logika Hirarki Eksklusif: Hanya muncul satu tipe yang paling sesuai */}
+              {isSelf ? (
+                <SelectItem value="self" className="py-2.5 px-3 focus:bg-primary/10">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-semibold text-sm text-primary">Self Assessment</span>
+                    <span className="text-[10px] text-muted-foreground/80 leading-tight">Penilaian Mandiri</span>
+                  </div>
+                </SelectItem>
+              ) : isSuperior ? (
+                <SelectItem value="supervisor" className="py-2.5 px-3 focus:bg-primary/10">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-semibold text-sm text-primary">Supervisor Assessment</span>
+                    <span className="text-[10px] text-muted-foreground/80 leading-tight">Penilaian sebagai Atasan Langsung</span>
+                  </div>
+                </SelectItem>
+              ) : (
+                <SelectItem value="peer" className="py-2.5 px-3 focus:bg-primary/10">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-semibold text-sm text-primary">Peer Assessment</span>
+                    <span className="text-[10px] text-muted-foreground/80 leading-tight">Penilaian sebagai Rekan Kerja</span>
+                  </div>
+                </SelectItem>
               )}
             </SelectContent>
           </Select>
-          {isRoleRestricted && (
-            <p className="text-[10px] text-muted-foreground mt-1.5">Opsi tipe dibatasi berdasarkan role Anda ({currentUser?.role}).</p>
-          )}
+          <p className="text-[11px] text-muted-foreground/70 mt-2 italic">
+            {isSelf 
+              ? "Sistem mendeteksi Anda sedang mengisi penilaian mandiri." 
+              : isSuperior 
+                ? "Sistem mendeteksi Anda menilai sebagai atasan langsung."
+                : "Sistem mendeteksi Anda menilai sebagai rekan sejawat."}
+          </p>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card rounded-2xl p-5">

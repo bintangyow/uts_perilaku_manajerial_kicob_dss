@@ -4,11 +4,25 @@
 
 import { NextRequest } from "next/server";
 import { db } from "@/db";
-import { employees, employeeSkills, skills, behavioralScores } from "@/db/schema";
+import { employees, employeeSkills, skills, behavioralScores, user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function GET() {
-  const allEmployees = await db.select().from(employees);
+  // Join with user table to get name and email
+  const allEmployees = await db
+    .select({
+      id: employees.id,
+      userId: employees.userId,
+      employeeCode: employees.employeeCode,
+      department: employees.department,
+      position: employees.position,
+      jobLevel: employees.jobLevel,
+      status: employees.status,
+      name: user.name,
+      email: user.email,
+    })
+    .from(employees)
+    .leftJoin(user, eq(employees.userId, user.id));
 
   // Fetch skills and scores for each employee
   const result = await Promise.all(
@@ -43,24 +57,29 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { name, email, employeeCode, department, position, status } = body;
+  try {
+    const body = await request.json();
+    const { userId, employeeCode, department, position, jobLevel, status } = body;
 
-  if (!name || !email || !employeeCode || !department || !position) {
-    return Response.json({ error: "Missing required fields" }, { status: 400 });
+    if (!userId || !employeeCode || !department || !position || !jobLevel) {
+      return Response.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    const [newEmployee] = await db
+      .insert(employees)
+      .values({
+        userId,
+        employeeCode,
+        department,
+        position,
+        jobLevel: Number(jobLevel),
+        status: status || "active",
+      })
+      .returning();
+
+    return Response.json(newEmployee, { status: 201 });
+  } catch (error: any) {
+    console.error("Error creating employee:", error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
-
-  const [newEmployee] = await db
-    .insert(employees)
-    .values({
-      name,
-      email,
-      employeeCode,
-      department,
-      position,
-      status: status || "active",
-    })
-    .returning();
-
-  return Response.json(newEmployee, { status: 201 });
 }

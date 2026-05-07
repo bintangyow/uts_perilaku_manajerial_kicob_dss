@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Mail, Building2, Briefcase, Hash, Plus, Trash2, Printer } from "lucide-react";
+import { ArrowLeft, Mail, Building2, Briefcase, Hash, Plus, Trash2, Printer, Search } from "lucide-react";
 import Link from "next/link";
 import useSWR from "swr";
 import { jsPDF } from "jspdf";
@@ -10,6 +10,7 @@ import autoTable from "jspdf-autotable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -45,6 +46,7 @@ export default function KaryawanDetailPage({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSkillId, setSelectedSkillId] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("Level 1");
+  const [skillSearch, setSkillSearch] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (isLoading) {
@@ -77,22 +79,22 @@ export default function KaryawanDetailPage({
     ? [
         {
           label: "Stabilitas Emosional",
-          score: employee.behavioralScore.avgEmotionalStability,
+          score: Number(employee.behavioralScore.avgEmotionalStability),
           maxScore: 5,
         },
         {
           label: "Komunikasi",
-          score: employee.behavioralScore.avgCommunication,
+          score: Number(employee.behavioralScore.avgCommunication),
           maxScore: 5,
         },
         {
           label: "Kerja Tim",
-          score: employee.behavioralScore.avgTeamwork,
+          score: Number(employee.behavioralScore.avgTeamwork),
           maxScore: 5,
         },
         {
           label: "Adaptabilitas",
-          score: employee.behavioralScore.avgAdaptability,
+          score: Number(employee.behavioralScore.avgAdaptability),
           maxScore: 5,
         },
       ]
@@ -172,52 +174,55 @@ export default function KaryawanDetailPage({
     });
 
     // 3. Behavioral Scores (Soft Factors)
-    const finalY = (doc as any).lastAutoTable.finalY + 15;
+    let currentY = (doc as any).lastAutoTable.finalY + 15;
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text("Hasil Assessment Perilaku (Soft Factor)", 20, finalY);
+    doc.text("Hasil Assessment Perilaku (Soft Factor)", 20, currentY);
 
     if (employee.behavioralScore) {
       autoTable(doc, {
-        startY: finalY + 5,
+        startY: currentY + 5,
         head: [["Kriteria Perilaku", "Skor (1-5)", "Keterangan"]],
         body: [
-          ["Stabilitas Emosional", employee.behavioralScore.avgEmotionalStability.toFixed(2), "Rata-rata Gabungan"],
-          ["Komunikasi", employee.behavioralScore.avgCommunication.toFixed(2), "Rata-rata Gabungan"],
-          ["Kerja Tim", employee.behavioralScore.avgTeamwork.toFixed(2), "Rata-rata Gabungan"],
-          ["Adaptabilitas", employee.behavioralScore.avgAdaptability.toFixed(2), "Rata-rata Gabungan"],
-          ["SKOR AKHIR PERILAKU", employee.behavioralScore.finalBehaviorScore.toFixed(2), "Sangat Baik"],
+          ["Stabilitas Emosional", Number(employee.behavioralScore.avgEmotionalStability).toFixed(2), "Rata-rata Gabungan"],
+          ["Komunikasi", Number(employee.behavioralScore.avgCommunication).toFixed(2), "Rata-rata Gabungan"],
+          ["Kerja Tim", Number(employee.behavioralScore.avgTeamwork).toFixed(2), "Rata-rata Gabungan"],
+          ["Adaptabilitas", Number(employee.behavioralScore.avgAdaptability).toFixed(2), "Rata-rata Gabungan"],
+          ["SKOR AKHIR PERILAKU", Number(employee.behavioralScore.finalBehaviorScore).toFixed(2), "Sangat Baik"],
         ],
         theme: "grid",
         headStyles: { fillColor: [51, 65, 85] as [number, number, number] },
         styles: { fontSize: 10 },
       });
+      currentY = (doc as any).lastAutoTable.finalY + 15;
     } else {
       doc.setFontSize(10);
       doc.setFont("helvetica", "italic");
-      doc.text("Belum ada data assessment perilaku.", 20, finalY + 10);
+      doc.text("Belum ada data assessment perilaku.", 20, currentY + 10);
+      currentY += 25; // Beri jarak manual jika tabel tidak ada
     }
 
     // 4. Hard Skills
-    const skillY = (doc as any).lastAutoTable?.finalY + 15 || finalY + 25;
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text("Daftar Hard Skill", 20, skillY);
+    doc.text("Daftar Hard Skill", 20, currentY);
 
     const skillBody = (employee.skills || []).map((s: any) => [s.skillName, `Level ${s.level}`]);
     
     if (skillBody.length > 0) {
       autoTable(doc, {
-        startY: skillY + 5,
+        startY: currentY + 5,
         head: [["Nama Skill", "Tingkat Penguasaan"]],
         body: skillBody,
         theme: "striped",
         headStyles: { fillColor: [14, 165, 233] },
       });
+      currentY = (doc as any).lastAutoTable.finalY + 15;
     } else {
       doc.setFontSize(10);
       doc.setFont("helvetica", "italic");
-      doc.text("Belum ada data hard skill.", 20, skillY + 10);
+      doc.text("Belum ada data hard skill.", 20, currentY + 10);
+      currentY += 25;
     }
 
     // Footer
@@ -363,7 +368,7 @@ export default function KaryawanDetailPage({
                 <h3 className="font-semibold">Skor Soft Factor</h3>
                 {employee.behavioralScore ? (
                   <Badge className="bg-primary text-white">
-                    {employee.behavioralScore.finalBehaviorScore.toFixed(2)}
+                    {Number(employee.behavioralScore.finalBehaviorScore).toFixed(2)}
                   </Badge>
                 ) : (
                   <Badge variant="outline">Belum Dinilai</Badge>
@@ -407,29 +412,44 @@ export default function KaryawanDetailPage({
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 mt-2">
-                    <div className="space-y-2">
-                      <Label>Nama Skill</Label>
-                      <Select
-                        value={selectedSkillId}
-                        onValueChange={(v) => v && setSelectedSkillId(v)}
-                      >
-                        <SelectTrigger className="h-10 bg-input/30 border-border/30 rounded-xl">
-                          <SelectValue placeholder="Pilih skill..." />
-                        </SelectTrigger>
-                        <SelectContent className="border-border/30 max-h-[200px]">
-                          {availableSkills.length > 0 ? (
-                            availableSkills.map((s: any) => (
-                              <SelectItem key={s.id} value={s.id.toString()}>
-                                {s.skillName} ({s.category === "hard" ? "Hard" : "Soft"})
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <div className="p-2 text-sm text-muted-foreground text-center">
-                              Tidak ada skill baru tersedia.
-                            </div>
-                          )}
-                        </SelectContent>
-                      </Select>
+                    <div className="space-y-3">
+                      <Label>Cari & Pilih Skill</Label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Ketik nama skill..."
+                          value={skillSearch}
+                          onChange={(e) => setSkillSearch(e.target.value)}
+                          className="pl-10 bg-input/30 border-border/30 rounded-xl"
+                        />
+                      </div>
+                      <div className="max-h-[200px] overflow-y-auto pr-2 space-y-1 custom-scrollbar">
+                        {availableSkills
+                          .filter(s => s.skillName.toLowerCase().includes(skillSearch.toLowerCase()))
+                          .map((s: any) => (
+                            <button
+                              key={s.id}
+                              onClick={() => setSelectedSkillId(s.id.toString())}
+                              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                                selectedSkillId === s.id.toString()
+                                  ? "bg-primary text-white shadow-lg shadow-primary/20"
+                                  : "bg-accent/5 hover:bg-accent/10 text-muted-foreground border border-transparent"
+                              }`}
+                            >
+                              <div className="flex justify-between items-center">
+                                <span>{s.skillName}</span>
+                                <Badge variant="outline" className="text-[9px] border-white/20 text-inherit capitalize">
+                                  {s.category}
+                                </Badge>
+                              </div>
+                            </button>
+                          ))}
+                        {availableSkills.filter(s => s.skillName.toLowerCase().includes(skillSearch.toLowerCase())).length === 0 && (
+                          <p className="text-center py-4 text-xs text-muted-foreground italic">
+                            Skill tidak ditemukan...
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label>Level Penguasaan</Label>
@@ -535,6 +555,7 @@ export default function KaryawanDetailPage({
               <thead>
                 <tr className="border-b border-border/20">
                   <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Tanggal</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Periode</th>
                   <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Asesor</th>
                   <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Tipe</th>
                   <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">SE</th>
@@ -552,6 +573,9 @@ export default function KaryawanDetailPage({
                         month: "short",
                         year: "numeric"
                       })}
+                    </td>
+                    <td className="py-3 px-4 text-sm font-medium text-primary/80">
+                      {a.period}
                     </td>
                     <td className="py-3 px-4 text-sm font-medium">{a.assessorName}</td>
                     <td className="py-3 px-4">

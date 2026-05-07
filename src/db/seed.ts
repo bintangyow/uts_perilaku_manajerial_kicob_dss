@@ -18,11 +18,13 @@ import {
   recommendationHistory,
 } from "./schema";
 
+import * as schema from "./schema";
+
 // Create db connection explicitly
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
-const db = drizzle(pool, { schema: require("./schema") });
+const db = drizzle(pool, { schema });
 
 const firstNames = [
   "Rizky", "Dimas", "Budi", "Siti", "Agus", "Putri", "Dian", "Andi", "Fajar", "Ayu",
@@ -57,17 +59,17 @@ function getRandomElements(arr: string[], num: number) {
 async function seed() {
   console.log("Menghapus data lama...");
   // Using delete instead of truncate
-  await db.delete(teamMembers);
-  await db.delete(teamCandidates);
-  await db.delete(projectRequirements);
-  await db.delete(recommendationHistory);
-  await db.delete(projects);
-  await db.delete(behavioralScores);
-  await db.delete(assessments);
-  await db.delete(employeeSkills);
-  await db.delete(employees);
-  await db.delete(skills);
-  await db.delete(user);
+  await db.delete(schema.teamMembers);
+  await db.delete(schema.teamCandidates);
+  await db.delete(schema.projectRequirements);
+  await db.delete(schema.recommendationHistory);
+  await db.delete(schema.projects);
+  await db.delete(schema.behavioralScores);
+  await db.delete(schema.assessments);
+  await db.delete(schema.employeeSkills);
+  await db.delete(schema.employees);
+  await db.delete(schema.skills);
+  await db.delete(schema.user);
 
   console.log("Generate Skills...");
   const skillInserts = [
@@ -75,16 +77,15 @@ async function seed() {
     ...softSkillsList.map(s => ({ skillName: s, category: "soft" })),
   ];
   
-  const createdSkills = await db.insert(skills).values(skillInserts).returning();
+  const createdSkills = await db.insert(schema.skills).values(skillInserts).returning();
   const dbHardSkills = createdSkills.filter(s => s.category === "hard");
   const dbSoftSkills = createdSkills.filter(s => s.category === "soft");
 
   console.log("Generate Users & Employees...");
-  const newUsers = [];
   
   // Set up better-auth instance using the explicit db pool
-  const { betterAuth } = require("better-auth");
-  const { drizzleAdapter } = require("better-auth/adapters/drizzle");
+  const { betterAuth } = await import("better-auth");
+  const { drizzleAdapter } = await import("better-auth/adapters/drizzle");
   const seedAuth = betterAuth({
     database: drizzleAdapter(db, { provider: "pg" }),
     emailAndPassword: { enabled: true },
@@ -98,21 +99,13 @@ async function seed() {
     const email = `${firstNames[i].toLowerCase()}.${lastNames[i].toLowerCase().replace(" ", "")}@kicob.com`;
     
     let role = "reviewer";
-    let dept = "Developer";
-    let position = "Staff";
     
     if (i < 2) {
       role = "admin";
-      dept = "IT Ops";
-      position = "System Administrator";
     } else if (i < 4) {
       role = "hr";
-      dept = "Human Resources";
-      position = "HR Specialist";
     } else if (i < 8) {
       role = "manager";
-      dept = i % 2 === 0 ? "Engineering" : "Product";
-      position = "Manager";
     }
 
     try {
@@ -153,22 +146,17 @@ async function seed() {
     return {
       userId: u.id,
       employeeCode: `EMP${String(i + 1).padStart(3, "0")}`,
-      name: u.name,
-      email: u.email,
       department: dept,
       position: position,
     };
   });
 
-  const insertedEmployees = await db.insert(employees).values(employeeInserts).returning();
+  const insertedEmployees = await db.insert(schema.employees).values(employeeInserts).returning();
 
   console.log("Generate Employee Skills & Assessments (dengan Trade-off)...");
   
   for (const emp of insertedEmployees) {
     // Determine Archetype
-    // 0 = Expert (High Hard, Low Soft)
-    // 1 = Leader (Low Hard, High Soft)
-    // 2 = Average (Balanced)
     const archetype = getRandomInt(0, 2);
 
     let hardLevelRange = [3, 4];
@@ -178,18 +166,18 @@ async function seed() {
     if (archetype === 0) {
       hardLevelRange = [4, 5];
       softLevelRange = [2, 3];
-      behTarget = 2.5; // Lower behavioral
+      behTarget = 2.5; 
     } else if (archetype === 1) {
       hardLevelRange = [2, 3];
       softLevelRange = [4, 5];
-      behTarget = 4.5; // High behavioral
+      behTarget = 4.5; 
     }
 
     // Insert Hard Skills
     const numHard = getRandomInt(3, 5);
     const empHardSkills = getRandomElements(dbHardSkills.map(s => s.id.toString()), numHard);
     for (const sid of empHardSkills) {
-      await db.insert(employeeSkills).values({
+      await db.insert(schema.employeeSkills).values({
         employeeId: emp.id,
         skillId: Number(sid),
         level: getRandomInt(hardLevelRange[0], hardLevelRange[1])
@@ -200,7 +188,7 @@ async function seed() {
     const numSoft = getRandomInt(2, 4);
     const empSoftSkills = getRandomElements(dbSoftSkills.map(s => s.id.toString()), numSoft);
     for (const sid of empSoftSkills) {
-      await db.insert(employeeSkills).values({
+      await db.insert(schema.employeeSkills).values({
         employeeId: emp.id,
         skillId: Number(sid),
         level: getRandomInt(softLevelRange[0], softLevelRange[1])
@@ -217,15 +205,16 @@ async function seed() {
       const team = Math.max(1, Math.min(5, behTarget + (Math.random() * 1.5 - 0.75)));
       const adapt = Math.max(1, Math.min(5, behTarget + (Math.random() * 1.5 - 0.75)));
 
-      await db.insert(assessments).values({
+      await db.insert(schema.assessments).values({
         employeeId: emp.id,
-        assessorName: atype === "self" ? emp.name : `Assessor ${getRandomInt(1, 10)}`,
+        assessorName: atype === "self" ? (insertedUsers.find(u => u.id === emp.userId)?.name || "Karyawan") : `Assessor ${getRandomInt(1, 10)}`,
         assessmentType: atype,
-        emotionalStability: Number(emo.toFixed(1)),
-        communication: Number(comm.toFixed(1)),
-        teamwork: Number(team.toFixed(1)),
-        adaptability: Number(adapt.toFixed(1)),
-        consistencyScore: Number((Math.random() * 10 + 80).toFixed(1)), // 80-90
+        emotionalStability: emo.toFixed(1),
+        communication: comm.toFixed(1),
+        teamwork: team.toFixed(1),
+        adaptability: adapt.toFixed(1),
+        consistencyScore: (Math.random() * 10 + 80).toFixed(1),
+        period: new Date(),
       });
 
       sumEmo += emo; sumComm += comm; sumTeam += team; sumAdapt += adapt;
@@ -238,17 +227,17 @@ async function seed() {
     const avgAdapt = sumAdapt / 4;
     const finalScore = (avgEmo + avgComm + avgTeam + avgAdapt) / 4;
 
-    await db.insert(behavioralScores).values({
+    await db.insert(schema.behavioralScores).values({
       employeeId: emp.id,
-      avgEmotionalStability: Number(avgEmo.toFixed(1)),
-      avgCommunication: Number(avgComm.toFixed(1)),
-      avgTeamwork: Number(avgTeam.toFixed(1)),
-      avgAdaptability: Number(avgAdapt.toFixed(1)),
-      finalBehaviorScore: Number(finalScore.toFixed(1)),
+      avgEmotionalStability: avgEmo.toFixed(1),
+      avgCommunication: avgComm.toFixed(1),
+      avgTeamwork: avgTeam.toFixed(1),
+      avgAdaptability: avgAdapt.toFixed(1),
+      finalBehaviorScore: finalScore.toFixed(1),
     });
   }
 
-  console.log("Seeding selesai dengan sukses! 30 Karyawan + Skills + Assessments berhasil di-generate.");
+  console.log("Seeding selesai dengan sukses!");
   process.exit(0);
 }
 
