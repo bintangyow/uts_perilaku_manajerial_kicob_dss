@@ -12,13 +12,21 @@ import {
   projectRequirements,
   employeeSkills,
   behavioralScores,
+  user,
 } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function GET() {
   const allCandidates = await db.select().from(teamCandidates);
   const allMembers = await db.select().from(teamMembers);
-  const allEmployees = await db.select().from(employees);
+  const allEmployees = await db
+    .select({
+      id: employees.id,
+      name: user.name,
+      position: employees.position,
+    })
+    .from(employees)
+    .leftJoin(user, eq(employees.userId, user.id));
 
   const result = allCandidates.map((candidate) => {
     const candidateMembers = allMembers
