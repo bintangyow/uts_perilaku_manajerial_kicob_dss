@@ -4,12 +4,20 @@
 
 import { NextRequest } from "next/server";
 import { db } from "@/db";
-import { employees, projects, teamMembers } from "@/db/schema";
+import { employees, projects, teamMembers, user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function GET() {
   try {
-    const allEmployees = await db.select().from(employees);
+    const allEmployees = await db
+      .select({
+        id: employees.id,
+        name: user.name,
+        position: employees.position,
+        department: employees.department,
+      })
+      .from(employees)
+      .leftJoin(user, eq(employees.userId, user.id));
     const allProjects = await db.select().from(projects);
     const allMembers = await db.select().from(teamMembers);
 
