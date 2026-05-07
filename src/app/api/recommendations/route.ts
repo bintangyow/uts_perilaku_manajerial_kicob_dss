@@ -161,7 +161,9 @@ export async function POST(request: NextRequest) {
       .values({
         projectId: project.id,
         ranking: nextRanking,
-        totalScore: selectedTeam.reduce((s, m) => s + m.totalScore, 0) / (selectedTeam.length || 1),
+        totalScore: (
+          selectedTeam.reduce((s, m) => s + m.totalScore, 0) / (selectedTeam.length || 1)
+        ).toFixed(2),
       })
       .returning();
 
@@ -169,9 +171,9 @@ export async function POST(request: NextRequest) {
       await db.insert(teamMembers).values({
         teamCandidateId: newCandidate.id,
         employeeId: member.id,
-        contributionScore: member.totalScore,
-        hardSkillScore: member.hardSkillScore,
-        softFactorScore: member.softFactorScore,
+        contributionScore: member.totalScore.toFixed(2),
+        hardSkillScore: member.hardSkillScore.toFixed(2),
+        softFactorScore: member.softFactorScore.toFixed(2),
       });
     }
 
