@@ -71,6 +71,7 @@ export default function ProyekPage() {
   // Temporary requirement selection
   const [currentSkillId, setCurrentSkillId] = useState("");
   const [currentLevel, setCurrentLevel] = useState(3);
+  const [skillSearch, setSkillSearch] = useState("");
 
   const filtered = projects
     ? projects.filter((p) =>
@@ -392,72 +393,121 @@ export default function ProyekPage() {
               </div>
             </div>
 
-            {/* Requirements */}
-            <div className="space-y-4 pt-2 border-t border-border/10">
-              <Label className="text-base font-semibold block">Kebutuhan Skill</Label>
+            {/* Requirements Section */}
+            <div className="space-y-4 pt-4 border-t border-border/10">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Kebutuhan Skill</Label>
+                <div className="text-[10px] text-muted-foreground bg-primary/5 px-2 py-0.5 rounded-full border border-primary/20">
+                  {selectedRequirements.length} Skill Terpilih
+                </div>
+              </div>
               
-              <div className="flex gap-2 items-end">
-                <div className="flex-1 space-y-2">
-                  <Label className="text-xs text-muted-foreground">Pilih Skill</Label>
-                  <Select value={currentSkillId} onValueChange={(v) => v && setCurrentSkillId(v)}>
-                    <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-11 w-full">
-                      <SelectValue placeholder="Cari skill..." />
-                    </SelectTrigger>
-                    <SelectContent className="border-border/30 rounded-2xl p-1">
-                      <SelectGroup>
-                        <SelectLabel className="text-[10px] font-bold text-primary uppercase tracking-widest px-3 py-2">
-                          Hard Skills
-                        </SelectLabel>
-                        {skills?.filter(s => s.category === "hard").map((skill: any) => (
-                          <SelectItem key={skill.id} value={skill.id.toString()} className="rounded-lg">
-                            <div className="flex items-center gap-2">
-                              <div className="w-1.5 h-1.5 rounded-full bg-chart-1" />
-                              <span>{skill.skillName}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                      <Separator className="my-1 bg-border/20" />
-                      <SelectGroup>
-                        <SelectLabel className="text-[10px] font-bold text-blue-400 uppercase tracking-widest px-3 py-2">
-                          Soft Skills
-                        </SelectLabel>
-                        {skills?.filter(s => s.category === "soft").map((skill: any) => (
-                          <SelectItem key={skill.id} value={skill.id.toString()} className="rounded-lg">
-                            <div className="flex items-center gap-2">
-                              <div className="w-1.5 h-1.5 rounded-full bg-chart-2" />
-                              <span>{skill.skillName}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="w-32 space-y-2">
-                  <Label className="text-xs text-muted-foreground">Level Min.</Label>
-                  <Select 
-                    value={currentLevel.toString()} 
-                    onValueChange={(v) => v && setCurrentLevel(parseInt(v))}
-                  >
-                    <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="border-border/30">
-                      {[1, 2, 3, 4, 5].map((l) => (
-                        <SelectItem key={l} value={l.toString()}>Level {l}</SelectItem>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Search & Select Skill */}
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">1. Cari Skill</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="Ketik skill (mis: Leadership)..."
+                        value={skillSearch}
+                        onChange={(e) => setSkillSearch(e.target.value)}
+                        className="pl-10 bg-input/30 border-border/30 rounded-xl h-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="max-h-[220px] overflow-y-auto pr-2 space-y-4 rounded-xl border border-border/10 p-2 bg-slate-950/20 custom-scrollbar">
+                    {/* Hard Skills Group */}
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-bold text-primary uppercase tracking-widest px-2 mb-1">Hard Skills</p>
+                      {skills?.filter(s => s.category === "hard" && s.skillName.toLowerCase().includes(skillSearch.toLowerCase())).map((skill: any) => (
+                        <button
+                          key={skill.id}
+                          onClick={() => setCurrentSkillId(skill.id.toString())}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all flex items-center gap-2 ${
+                            currentSkillId === skill.id.toString()
+                              ? "bg-primary text-white shadow-lg shadow-primary/20"
+                              : "hover:bg-primary/10 text-muted-foreground"
+                          }`}
+                        >
+                          <div className={`w-1.5 h-1.5 rounded-full ${currentSkillId === skill.id.toString() ? "bg-white" : "bg-primary"}`} />
+                          {skill.skillName}
+                        </button>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </div>
+
+                    <Separator className="bg-border/10" />
+
+                    {/* Soft Skills Group */}
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-bold text-blue-400 uppercase tracking-widest px-2 mb-1">Soft Skills</p>
+                      {skills?.filter(s => s.category === "soft" && s.skillName.toLowerCase().includes(skillSearch.toLowerCase())).map((skill: any) => (
+                        <button
+                          key={skill.id}
+                          onClick={() => setCurrentSkillId(skill.id.toString())}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all flex items-center gap-2 ${
+                            currentSkillId === skill.id.toString()
+                              ? "bg-primary text-white shadow-lg shadow-primary/20"
+                              : "hover:bg-blue-400/10 text-muted-foreground"
+                          }`}
+                        >
+                          <div className={`w-1.5 h-1.5 rounded-full ${currentSkillId === skill.id.toString() ? "bg-white" : "bg-blue-400"}`} />
+                          {skill.skillName}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <Button 
-                  type="button" 
-                  onClick={handleAddRequirement}
-                  variant="secondary" 
-                  className="rounded-xl h-10 px-3 bg-primary/10 text-primary hover:bg-primary/20"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
+
+                {/* Level & Add Action */}
+                <div className="space-y-3 flex flex-col justify-end">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">2. Level Minimum</Label>
+                    <Select 
+                      value={currentLevel.toString()} 
+                      onValueChange={(v) => v && setCurrentLevel(parseInt(v))}
+                    >
+                      <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-10 w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="border-border/30">
+                        {[1, 2, 3, 4, 5].map((l) => (
+                          <SelectItem key={l} value={l.toString()}>Level {l}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <Button 
+                    type="button" 
+                    onClick={() => {
+                      handleAddRequirement();
+                      setSkillSearch(""); // Clear search after adding
+                    }}
+                    disabled={!currentSkillId}
+                    className="w-full rounded-xl h-10 bg-primary/20 text-primary hover:bg-primary hover:text-white border border-primary/30 gap-2 transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Tambahkan Skill
+                  </Button>
+
+                  <div className="flex-1 bg-primary/5 rounded-2xl border border-dashed border-primary/20 p-4 flex flex-col items-center justify-center text-center">
+                    {currentSkillId ? (
+                      <>
+                        <p className="text-[10px] text-primary uppercase font-bold mb-1">Siap Ditambahkan</p>
+                        <p className="text-sm font-semibold">{skills?.find(s => s.id.toString() === currentSkillId)?.skillName}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Level {currentLevel}</p>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5 text-primary/30 mb-2" />
+                        <p className="text-[10px] text-muted-foreground">Pilih skill dari daftar sebelah kiri</p>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Selected Reqs List */}
