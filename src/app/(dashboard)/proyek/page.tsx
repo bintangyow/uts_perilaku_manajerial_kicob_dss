@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +24,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -397,15 +400,37 @@ export default function ProyekPage() {
                 <div className="flex-1 space-y-2">
                   <Label className="text-xs text-muted-foreground">Pilih Skill</Label>
                   <Select value={currentSkillId} onValueChange={(v) => v && setCurrentSkillId(v)}>
-                    <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-10">
+                    <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-11 w-full">
                       <SelectValue placeholder="Cari skill..." />
                     </SelectTrigger>
-                    <SelectContent className="border-border/30">
-                      {skills?.map((skill: any) => (
-                        <SelectItem key={skill.id} value={skill.id.toString()}>
-                          {skill.skillName} ({skill.category === "hard" ? "Hard" : "Soft"})
-                        </SelectItem>
-                      ))}
+                    <SelectContent className="border-border/30 rounded-2xl p-1">
+                      <SelectGroup>
+                        <SelectLabel className="text-[10px] font-bold text-primary uppercase tracking-widest px-3 py-2">
+                          Hard Skills
+                        </SelectLabel>
+                        {skills?.filter(s => s.category === "hard").map((skill: any) => (
+                          <SelectItem key={skill.id} value={skill.id.toString()} className="rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full bg-chart-1" />
+                              <span>{skill.skillName}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                      <Separator className="my-1 bg-border/20" />
+                      <SelectGroup>
+                        <SelectLabel className="text-[10px] font-bold text-blue-400 uppercase tracking-widest px-3 py-2">
+                          Soft Skills
+                        </SelectLabel>
+                        {skills?.filter(s => s.category === "soft").map((skill: any) => (
+                          <SelectItem key={skill.id} value={skill.id.toString()} className="rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full bg-chart-2" />
+                              <span>{skill.skillName}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 </div>
