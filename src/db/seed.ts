@@ -214,7 +214,7 @@ async function seed() {
         teamwork: team.toFixed(1),
         adaptability: adapt.toFixed(1),
         consistencyScore: (Math.random() * 10 + 80).toFixed(1),
-        period: new Date(),
+        period: "Mei 2026",
       });
 
       sumEmo += emo; sumComm += comm; sumTeam += team; sumAdapt += adapt;
