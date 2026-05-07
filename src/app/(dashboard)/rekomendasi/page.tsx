@@ -267,10 +267,10 @@ export default function RekomendasiPage() {
   const generateDetailedReason = (candidate: any) => {
     if (!proj || !candidate.members) return "";
 
-    const avgHard = (candidate.members.reduce((acc: number, m: any) => acc + (m.hardSkillScore || 0), 0) / candidate.members.length).toFixed(1);
-    const avgSoft = (candidate.members.reduce((acc: number, m: any) => acc + (m.softFactorScore || 0), 0) / candidate.members.length).toFixed(1);
+    const avgHard = (candidate.members.reduce((acc: number, m: any) => acc + Number(m.hardSkillScore || 0), 0) / candidate.members.length).toFixed(1);
+    const avgSoft = (candidate.members.reduce((acc: number, m: any) => acc + Number(m.softFactorScore || 0), 0) / candidate.members.length).toFixed(1);
 
-    return `Komposisi tim ini direkomendasikan karena memiliki indeks kecocokan (matching rate) sebesar ${candidate.totalScore.toFixed(1)}% terhadap profil kebutuhan proyek. Seluruh anggota tim memenuhi kriteria kompetensi teknis yang dipersyaratkan dengan rata-rata skor hard skill ${avgHard}/100, didukung oleh stabilitas perilaku (soft factor) pada level ${avgSoft}/100 untuk menjamin performa kolaborasi yang optimal.`;
+    return `Komposisi tim ini direkomendasikan karena memiliki indeks kecocokan (matching rate) sebesar ${Number(candidate.totalScore).toFixed(1)}% terhadap profil kebutuhan proyek. Seluruh anggota tim memenuhi kriteria kompetensi teknis yang dipersyaratkan dengan rata-rata skor hard skill ${avgHard}/100, didukung oleh stabilitas perilaku (soft factor) pada level ${avgSoft}/100 untuk menjamin performa kolaborasi yang optimal.`;
   };
 
   return (
@@ -427,7 +427,7 @@ export default function RekomendasiPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] text-muted-foreground">Skor DSS</p>
-                        <p className="text-xl font-bold text-gradient">{c.totalScore.toFixed(1)}</p>
+                        <p className="text-xl font-bold text-gradient">{Number(c.totalScore).toFixed(1)}</p>
                       </div>
                     </div>
 

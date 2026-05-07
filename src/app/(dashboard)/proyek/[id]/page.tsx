@@ -68,66 +68,115 @@ export default function ProyekDetailPage({
     if (!project || !members || members.length === 0) return "";
     
     // Ensure each score is capped at 100 before averaging
-    const avgHard = (members.reduce((acc: number, m: any) => acc + Math.min(m.hardSkillScore || 0, 100), 0) / members.length).toFixed(1);
-    const avgSoft = (members.reduce((acc: number, m: any) => acc + Math.min(m.softFactorScore || 0, 100), 0) / members.length).toFixed(1);
-    const avgTotal = (members.reduce((acc: number, m: any) => acc + Math.min(m.contributionScore || 0, 100), 0) / members.length).toFixed(1);
+    const avgHard = (members.reduce((acc: number, m: any) => acc + Math.min(Number(m.hardSkillScore || 0), 100), 0) / members.length).toFixed(1);
+    const avgSoft = (members.reduce((acc: number, m: any) => acc + Math.min(Number(m.softFactorScore || 0), 100), 0) / members.length).toFixed(1);
+    const avgTotal = (members.reduce((acc: number, m: any) => acc + Math.min(Number(m.contributionScore || 0), 100), 0) / members.length).toFixed(1);
 
     return `Tim ini telah disahkan dengan indeks kecocokan rata-rata ${avgTotal}% terhadap profil kebutuhan proyek. Seluruh anggota memenuhi kriteria kompetensi teknis dengan rata-rata skor hard skill ${avgHard}/100, didukung oleh stabilitas perilaku (soft factor) pada level ${avgSoft}/100 untuk menjamin performa kolaborasi yang berkelanjutan.`;
   };
 
   const handlePrintReport = async () => {
     const doc = new jsPDF();
-    const primaryColor: [number, number, number] = [14, 165, 233];
+    const navyBlue: [number, number, number] = [0, 26, 51];
+    const accentBlue: [number, number, number] = [14, 165, 233];
 
-    doc.setFillColor(30, 41, 59);
-    doc.rect(0, 0, 210, 40, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.text("LAPORAN RESMI TIM PROYEK", 20, 25);
+    // --- Header Section ---
+    doc.setFillColor(...navyBlue);
+    doc.rect(0, 0, 210, 45, "F");
     
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(24);
+    doc.text("KICOB", 20, 25);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Behavioral DSS Platform — Laporan Resmi Proyek", 20, 32);
+    
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("LAPORAN ANALISIS TIM", 120, 28);
+
+    // --- Project Info ---
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Informasi Proyek", 20, 55);
-    
+    doc.text("I. INFORMASI PROYEK", 20, 60);
+    doc.setDrawColor(...navyBlue);
+    doc.setLineWidth(0.5);
+    doc.line(20, 62, 190, 62);
+
     autoTable(doc, {
-      startY: 60,
-      head: [["Atribut", "Detail"]],
+      startY: 65,
+      margin: { left: 20 },
+      head: [["Atribut", "Detail Informasi"]],
       body: [
         ["Nama Proyek", project.projectName],
+        ["Deskripsi", project.description || "-"],
         ["Status", project.status.toUpperCase()],
         ["Ukuran Tim", `${project.teamSize} Orang`],
-        ["Tanggal Pengesahan", new Date(project.createdAt).toLocaleDateString("id-ID")],
+        ["Tanggal Cetak", new Date().toLocaleString("id-ID")],
       ],
-      theme: "striped",
-      headStyles: { fillColor: primaryColor },
+      theme: "plain",
+      headStyles: { textColor: navyBlue, fontStyle: "bold" },
+      columnStyles: { 0: { fontStyle: "bold", cellWidth: 40 } },
     });
 
-    const nextY = (doc as any).lastAutoTable.finalY + 15;
-    doc.text("Komposisi Anggota Tim", 20, nextY);
+    // --- Requirements Section ---
+    let nextY = (doc as any).lastAutoTable.finalY + 15;
+    doc.setFontSize(14);
+    doc.text("II. KEBUTUHAN KOMPETENSI", 20, nextY);
+    doc.line(20, nextY + 2, 190, nextY + 2);
+    
+    const skillList = (project.requirements || []).map((r: any) => r.skillName).join(", ");
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(doc.splitTextToSize(skillList || "Tidak ada kriteria khusus.", 170), 20, nextY + 10);
+
+    // --- Team Composition ---
+    nextY = nextY + 25;
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("III. KOMPOSISI ANGGOTA TIM", 20, nextY);
+    doc.line(20, nextY + 2, 190, nextY + 2);
     
     const tableBody = (project.teamMembers || []).map((m: any) => [
       m.employeeName, 
       m.employeePosition, 
-      Math.min(m.hardSkillScore || 0, 100).toFixed(1), 
-      Math.min(m.softFactorScore || 0, 100).toFixed(1), 
-      Math.min(m.contributionScore || 0, 100).toFixed(1),
+      Math.min(Number(m.hardSkillScore || 0), 100).toFixed(1), 
+      Math.min(Number(m.softFactorScore || 0), 100).toFixed(1), 
+      Math.min(Number(m.contributionScore || 0), 100).toFixed(1),
     ]);
 
     autoTable(doc, {
       startY: nextY + 5,
-      head: [["Nama", "Posisi", "Hard", "Soft", "Total"]],
+      margin: { left: 20 },
+      head: [["Nama Anggota", "Posisi", "Hard", "Soft", "Total"]],
       body: tableBody,
-      headStyles: { fillColor: [51, 65, 85] },
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: navyBlue, textColor: [255, 255, 255] },
     });
 
-    const reasonY = (doc as any).lastAutoTable.finalY + 15;
+    // --- Recommendation Analysis ---
+    nextY = (doc as any).lastAutoTable.finalY + 15;
+    doc.setFillColor(248, 250, 252);
+    doc.rect(20, nextY, 170, 35, "F");
+    doc.setDrawColor(226, 232, 240);
+    doc.rect(20, nextY, 170, 35, "S");
+
+    doc.setTextColor(...navyBlue);
     doc.setFontSize(12);
-    doc.text("Analisis Rekomendasi", 20, reasonY);
+    doc.setFont("helvetica", "bold");
+    doc.text("Analisis Kesesuaian Sistem (DSS Analysis)", 25, nextY + 10);
+    
+    doc.setTextColor(51, 65, 85);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    const splitText = doc.splitTextToSize(generateDetailedReason(project.teamMembers || []), 170);
-    doc.text(splitText, 20, reasonY + 7);
+    const reasonText = generateDetailedReason(project.teamMembers || []);
+    doc.text(doc.splitTextToSize(reasonText, 160), 25, nextY + 18);
+
+    // --- Footer ---
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text("Dokumen ini dihasilkan secara otomatis oleh KiCob DSS Platform.", 105, 285, { align: "center" });
 
     const blob = doc.output("blob");
     const url = URL.createObjectURL(blob);
@@ -236,6 +285,26 @@ export default function ProyekDetailPage({
         </div>
 
         <div className="lg:col-span-2 space-y-6">
+          {/* Skills Requirements - Always visible if exists */}
+          {project.requirements && project.requirements.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-5">
+                <Sparkles className="w-24 h-24" />
+              </div>
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <Settings2 className="w-4 h-4 text-primary" />
+                Kebutuhan Kompetensi Proyek
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {project.requirements.map((req: any) => (
+                  <Badge key={req.id} variant="secondary" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-xs">
+                    {req.skillName}
+                  </Badge>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {project.teamMembers && project.teamMembers.length > 0 ? (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
               <div className="glass-card rounded-2xl p-5">
@@ -243,6 +312,7 @@ export default function ProyekDetailPage({
                   <Briefcase className="w-4 h-4 text-primary" />
                   Anggota Tim Resmi
                 </h3>
+                {/* ... existing table code ... */}
                 <div className="overflow-x-auto rounded-xl border border-border/10">
                   <table className="w-full text-sm">
                     <thead>
@@ -306,7 +376,7 @@ export default function ProyekDetailPage({
                       <SkillRadarChart 
                         data={project.teamMembers.map((m: any) => ({
                           subject: m.employeeName?.split(" ")[0] || "?",
-                          value: Math.min((m.contributionScore / 100) * 5, 5),
+                          value: Math.min((Number(m.contributionScore || 0) / 100) * 5, 5),
                           fullMark: 5,
                         }))} 
                         height={240} 
@@ -316,13 +386,30 @@ export default function ProyekDetailPage({
                   <div className="w-full md:w-64 space-y-4">
                     <h3 className="font-semibold text-sm">Metrik Tim</h3>
                     {[
-                      { label: "Rata-rata Hard Skill", val: project.teamMembers.reduce((a: any, b: any) => a + (b.hardSkillScore || 0), 0) / project.teamMembers.length },
-                      { label: "Rata-rata Soft Factor", val: project.teamMembers.reduce((a: any, b: any) => a + (b.softFactorScore || 0), 0) / project.teamMembers.length },
-                      { label: "Skor Sinergi Tim", val: project.teamMembers.reduce((a: any, b: any) => a + (b.contributionScore || 0), 0) / project.teamMembers.length },
+                      { 
+                        label: "Rata-rata Hard Skill", 
+                        val: project.teamMembers?.length 
+                          ? project.teamMembers.reduce((a: number, b: any) => a + Number(b.hardSkillScore || 0), 0) / project.teamMembers.length 
+                          : 0 
+                      },
+                      { 
+                        label: "Rata-rata Soft Factor", 
+                        val: project.teamMembers?.length 
+                          ? project.teamMembers.reduce((a: number, b: any) => a + Number(b.softFactorScore || 0), 0) / project.teamMembers.length 
+                          : 0 
+                      },
+                      { 
+                        label: "Skor Sinergi Tim", 
+                        val: project.teamMembers?.length 
+                          ? project.teamMembers.reduce((a: number, b: any) => a + Number(b.contributionScore || 0), 0) / project.teamMembers.length 
+                          : 0 
+                      },
                     ].map((metric) => (
                       <div key={metric.label} className="p-3 rounded-xl bg-accent/5 border border-border/10">
                         <p className="text-[10px] text-muted-foreground uppercase font-bold">{metric.label}</p>
-                        <p className="text-lg font-bold text-gradient">{metric.val.toFixed(1)}</p>
+                        <p className="text-lg font-bold text-gradient">
+                          {isNaN(metric.val) ? "0.0" : metric.val.toFixed(1)}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -330,10 +417,25 @@ export default function ProyekDetailPage({
               </div>
             </motion.div>
           ) : (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-12 text-center">
-              <Sparkles className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-              <p className="text-muted-foreground">Belum ada tim yang disahkan.</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">Gunakan fitur rekomendasi untuk membentuk tim.</p>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              <div className="glass-card rounded-2xl p-8 text-center border-dashed border-primary/20">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Sparkles className="w-8 h-8 text-primary" />
+                </div>
+                <h4 className="font-bold text-lg">Siap Membentuk Tim?</h4>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-6">
+                  Proyek ini masih berupa draft. Klik tombol di samping untuk mendapatkan rekomendasi tim terbaik berdasarkan kriteria kompetensi yang Anda butuhkan.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-md mx-auto">
+                  {Array.from({ length: Math.min(project.teamSize, 3) }).map((_, i) => (
+                    <div key={i} className="p-4 rounded-xl border border-border/10 bg-muted/5 flex flex-col items-center gap-2 opacity-50">
+                      <div className="w-8 h-8 rounded-full bg-border/20" />
+                      <div className="w-12 h-2 bg-border/20 rounded" />
+                    </div>
+                  ))}
+                  {project.teamSize > 3 && <div className="flex items-center justify-center text-xs text-muted-foreground">+{project.teamSize - 3} lainnya</div>}
+                </div>
+              </div>
             </motion.div>
           )}
         </div>
