@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import useSWR, { useSWRConfig } from "swr";
-import { Plus, Search, Eye, Calendar, Users as UsersIcon, X, Trash2, Sliders } from "lucide-react";
+import { Plus, Search, Eye, Calendar, Users as UsersIcon, X, Trash2, Sliders, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
