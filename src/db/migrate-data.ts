@@ -9,8 +9,8 @@ async function migrate() {
   // 1. Get all employees with text-based department/position
   const allEmployees = await db.select().from(employees);
   
-  const uniqueDepartments = Array.from(new Set(allEmployees.map(e => e.department).filter(Boolean)));
-  const uniquePositions = Array.from(new Set(allEmployees.map(e => e.position).filter(Boolean)));
+  const uniqueDepartments = Array.from(new Set((allEmployees as any[]).map(e => e.department).filter(Boolean)));
+  const uniquePositions = Array.from(new Set((allEmployees as any[]).map(e => e.position).filter(Boolean)));
 
   console.log(`Found ${uniqueDepartments.length} unique departments and ${uniquePositions.length} unique positions.`);
 
@@ -30,7 +30,8 @@ async function migrate() {
 
   // 4. Update Employees
   console.log("Updating employee records...");
-  for (const emp of allEmployees) {
+  for (const empRaw of allEmployees) {
+    const emp = empRaw as any;
     const updates: any = {};
     if (emp.department && deptMap.has(emp.department)) {
       updates.departmentId = deptMap.get(emp.department);
