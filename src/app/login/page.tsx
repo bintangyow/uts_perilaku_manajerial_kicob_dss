@@ -205,8 +205,8 @@ export default function LoginPage() {
               </p>
             </motion.div>
 
-            {/* Toggle login/register - Hidden when registration is disabled */}
-            {/* <motion.div layout="position" className="flex rounded-xl bg-muted/20 p-1 mb-8">
+            {/* Toggle login/register */}
+            <motion.div layout="position" className="flex rounded-xl bg-muted/20 p-1 mb-8">
               <button
                 onClick={() => { setMode("login"); setError(""); }}
                 className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2 ${
@@ -218,7 +218,18 @@ export default function LoginPage() {
                 <LogIn className="w-4 h-4" />
                 Masuk
               </button>
-            </motion.div> */}
+              <button
+                onClick={() => { setMode("register"); setError(""); }}
+                className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  mode === "register"
+                    ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <UserPlus className="w-4 h-4" />
+                Daftar
+              </button>
+            </motion.div>
 
             <motion.form layout onSubmit={handleSubmit} className="space-y-5">
               <AnimatePresence mode="wait">
@@ -330,7 +341,13 @@ export default function LoginPage() {
 
             <motion.div layout="position" className="mt-8 pt-8 border-t border-border/30 text-center">
               <p className="text-sm text-muted-foreground">
-                Gunakan akun yang telah didaftarkan oleh Admin/HR.
+                {mode === "login" ? "Belum memiliki akses?" : "Sudah memiliki akun?"}{" "}
+                <button 
+                  onClick={() => setMode(mode === "login" ? "register" : "login")}
+                  className="text-primary font-semibold hover:underline"
+                >
+                  {mode === "login" ? "Daftar Gratis" : "Masuk Sekarang"}
+                </button>
               </p>
             </motion.div>
           </motion.div>
