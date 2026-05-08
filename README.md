@@ -337,6 +337,34 @@ http://localhost:3000
 
 ---
 
+## 🔐 Keamanan & Demo / Security & Demo
+ 
+**🇮🇩** Untuk menjaga integritas data selama periode penilaian UTS:
+- **Registrasi Publik Dimatikan**: Fitur pendaftaran akun baru dinonaktifkan untuk mencegah akses tidak sah.
+- **Kredensial Live**: Akun untuk mencoba website ini secara langsung bersifat privat (silakan hubungi pengembang).
+- **Development**: Untuk mencoba secara lokal, jalankan `npm run db:seed`. Detail akun (email/password) dapat dilihat langsung di file `src/db/seed.ts`.
+ 
+**🇬🇧** To maintain data integrity during the UTS assessment period:
+- **Public Registration Disabled**: New account sign-ups are disabled to prevent unauthorized access.
+- **Live Credentials**: Accounts for testing the live website are private (please contact the developer).
+- **Development**: For local testing, refer to `src/db/seed.ts` for account details after running the seed script.
+ 
+---
+ 
+## 📸 Screenshots
+ 
+<div align="center">
+  <p><i>Halaman Dashboard Utama / Main Dashboard Page</i></p>
+  <img src="https://via.placeholder.com/800x450.png?text=Dashboard+KiCob" alt="Dashboard" width="800" />
+ 
+  <br/><br/>
+ 
+  <p><i>Hasil Rekomendasi Tim DSS / DSS Team Recommendation Results</i></p>
+  <img src="https://via.placeholder.com/800x450.png?text=Recommendation+KiCob" alt="Recommendations" width="800" />
+</div>
+ 
+---
+ 
 ### 👤 Akun Admin / Admin Account
 
 **🇮🇩** Saat pertama kali menjalankan aplikasi (setelah seed), gunakan kredensial berikut untuk login sebagai Admin:

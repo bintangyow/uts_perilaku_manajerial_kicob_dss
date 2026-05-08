@@ -18,6 +18,11 @@ export const auth = betterAuth({
   baseURL: cleanAppUrl,
   emailAndPassword: {
     enabled: true,
+    // Set to 'true' to allow public registration (Portfolio mode)
+    // Set to 'false' to restrict access only to seeded accounts (UTS mode)
+    signUp: {
+      enabled: false,
+    },
   },
   advanced: {
     cookiePrefix: "kicob",
