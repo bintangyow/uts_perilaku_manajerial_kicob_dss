@@ -112,7 +112,21 @@ Assessment weights:
 - **Audit Trail**: Complete history of every approval and rejection of team recommendations.
 
 ---
-
+ 
+### 🖼️ 5. Dynamic Profile Management
+ 
+**🇮🇩** Integrasi sistem unggah foto profil yang sinkron ke seluruh platform.
+- **Vercel Blob Storage**: Penyimpanan foto profil yang aman dan cepat di cloud.
+- **Unified Avatar**: Foto profil muncul secara konsisten di Dashboard, Daftar Karyawan, Proyek, Rekomendasi, hingga Form Assessment.
+- **Smart Fallback**: Otomatis menampilkan inisial nama jika foto profil belum diunggah.
+ 
+**🇬🇧** Integrated profile picture upload system synchronized across the platform.
+- **Vercel Blob Storage**: Secure and fast cloud storage for profile photos.
+- **Unified Avatar**: Profile pictures appear consistently in the Dashboard, Employee List, Projects, Recommendations, and Assessment Forms.
+- **Smart Fallback**: Automatically displays name initials if a profile picture has not been uploaded.
+ 
+---
+ 
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
@@ -129,6 +143,7 @@ Assessment weights:
 | **PDF Generation** | [jspdf](https://github.com/parallax/jsPDF) + [html2canvas](https://html2canvas.hertzen.com/) |
 | **Form Handling** | [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) |
 | **Data Fetching** | [SWR](https://swr.vercel.app/) |
+| **File Storage** | [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) |
 
 ---
 
