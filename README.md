@@ -355,12 +355,17 @@ http://localhost:3000
  
 <div align="center">
   <p><i>Halaman Dashboard Utama / Main Dashboard Page</i></p>
-  <img src="https://via.placeholder.com/800x450.png?text=Dashboard+KiCob" alt="Dashboard" width="800" />
+  <img src="public/screenshots/dashboard.png" alt="Dashboard" width="800" />
+ 
+  <br/><br/>
+ 
+  <p><i>Halaman Daftar Proyek / Projects List Page</i></p>
+  <img src="public/screenshots/proyek.png" alt="Proyek" width="800" />
  
   <br/><br/>
  
   <p><i>Hasil Rekomendasi Tim DSS / DSS Team Recommendation Results</i></p>
-  <img src="https://via.placeholder.com/800x450.png?text=Recommendation+KiCob" alt="Recommendations" width="800" />
+  <img src="public/screenshots/rekomendasi.png" alt="Recommendations" width="800" />
 </div>
  
 ---
