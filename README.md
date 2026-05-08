@@ -127,6 +127,22 @@ Assessment weights:
  
 ---
  
+### 🚀 Future Roadmap & Development
+ 
+**🇮🇩** Proyek ini dikembangkan sebagai tugas **UTS Mata Kuliah Perilaku Manajerial**. Rencana pengembangan selanjutnya meliputi:
+- **Advanced Audit Trail**: Pencatatan histori perubahan skor perilaku secara mendalam untuk keperluan audit HR.
+- **Real-time Notifications**: Notifikasi instan via email/sistem saat periode penilaian dimulai atau form disubmit.
+- **Machine Learning Integration**: Optimasi rekomendasi tim menggunakan algoritma pembelajaran mesin untuk prediksi performa tim di masa depan.
+- **Mobile Application**: Pengembangan versi mobile untuk memudahkan pengisian assessment di mana saja.
+ 
+**🇬🇧** This project was developed as a **Midterm Assignment for the Managerial Behavior Course**. Future development plans include:
+- **Advanced Audit Trail**: In-depth recording of behavioral score changes for HR audit purposes.
+- **Real-time Notifications**: Instant system/email notifications when assessment periods start or forms are submitted.
+- **Machine Learning Integration**: Team recommendation optimization using machine learning to predict future team performance.
+- **Mobile Application**: Mobile version development for easier assessment completion on the go.
+ 
+---
+ 
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
