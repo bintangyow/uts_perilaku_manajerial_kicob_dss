@@ -64,7 +64,7 @@ export function SkillRadarChart({
           tickCount={6}
         />
         <Tooltip
-          formatter={(value: number) => value.toFixed(2)}
+          formatter={(value: any) => (typeof value === "number" ? value.toFixed(2) : value)}
           contentStyle={{
             background: "oklch(0.16 0.04 260 / 90%)",
             border: "1px solid oklch(0.4 0.08 260 / 30%)",
