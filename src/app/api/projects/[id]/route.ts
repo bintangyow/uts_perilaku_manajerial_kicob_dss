@@ -63,6 +63,7 @@ export async function GET(
           hardSkillScore: teamMembers.hardSkillScore,
           softFactorScore: teamMembers.softFactorScore,
           employeeName: user.name,
+          employeeImage: user.image,
           employeePosition: positions.name,
           employeeDepartment: departments.name,
         })

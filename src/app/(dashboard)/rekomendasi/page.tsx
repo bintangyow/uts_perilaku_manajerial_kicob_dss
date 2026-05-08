@@ -474,9 +474,17 @@ export default function RekomendasiPage() {
                               >
                                 <td className="py-2.5 px-3">
                                   <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center shrink-0">
-                                      {displayName?.charAt(0) ?? "?"}
-                                    </div>
+                                    {m.employeeImage ? (
+                                      <img 
+                                        src={m.employeeImage} 
+                                        alt={displayName} 
+                                        className="w-7 h-7 rounded-lg object-cover border border-border/20 shrink-0" 
+                                      />
+                                    ) : (
+                                      <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center shrink-0">
+                                        {displayName?.charAt(0) ?? "?"}
+                                      </div>
+                                    )}
                                     <span className={`text-sm font-medium ${changed ? "text-amber-400" : ""}`}>
                                       {displayName}
                                     </span>

@@ -24,6 +24,7 @@ export async function GET() {
     .select({
       id: employees.id,
       name: user.name,
+      image: user.image,
       position: positions.name,
     })
     .from(employees)
@@ -38,6 +39,7 @@ export async function GET() {
         return {
           ...m,
           employeeName: emp?.name || "Unknown",
+          employeeImage: emp?.image || null,
           employeePosition: emp?.position || "Unknown",
         };
       });

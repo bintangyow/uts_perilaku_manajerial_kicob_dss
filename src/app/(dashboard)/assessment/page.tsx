@@ -164,9 +164,17 @@ export default function AssessmentPage() {
                   >
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
-                          {emp.name?.charAt(0) || "U"}
-                        </div>
+                        {emp.image ? (
+                          <img 
+                            src={emp.image} 
+                            alt={emp.name} 
+                            className="w-9 h-9 rounded-lg object-cover border border-border/20" 
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+                            {emp.name?.charAt(0) || "U"}
+                          </div>
+                        )}
                         <div>
                           <p className="font-medium text-sm">{emp.name}</p>
                           <p className="text-xs text-muted-foreground">{emp.position}</p>

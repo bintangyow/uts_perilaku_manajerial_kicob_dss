@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
       position: positions.name,
       status: employees.status,
       name: user.name,
+      image: user.image,
       email: user.email,
     })
     .from(employees)

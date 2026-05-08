@@ -167,7 +167,15 @@ export default function AssessmentFormPage({ params }: { params: Promise<{ id: s
       )}
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-5 flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center text-primary text-lg font-bold">{emp.name.charAt(0)}</div>
+        {emp.image ? (
+          <img 
+            src={emp.image} 
+            alt={emp.name} 
+            className="w-12 h-12 rounded-xl object-cover border border-border/20" 
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center text-primary text-lg font-bold">{emp.name?.charAt(0)}</div>
+        )}
         <div className="flex-1">
           <h3 className="font-semibold">{emp.name}</h3>
           <p className="text-xs text-muted-foreground">

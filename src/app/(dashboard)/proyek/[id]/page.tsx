@@ -329,7 +329,17 @@ export default function ProyekDetailPage({
                         <tr key={member.id} className="border-b border-border/10 hover:bg-accent/5 transition-colors">
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">{member.employeeName?.charAt(0)}</div>
+                              {member.employeeImage ? (
+                                <img 
+                                  src={member.employeeImage} 
+                                  alt={member.employeeName} 
+                                  className="w-8 h-8 rounded-lg object-cover border border-border/20" 
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                                  {member.employeeName?.charAt(0)}
+                                </div>
+                              )}
                               <span className="font-medium">{member.employeeName}</span>
                             </div>
                           </td>
