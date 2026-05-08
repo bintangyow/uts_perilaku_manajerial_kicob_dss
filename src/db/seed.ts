@@ -66,6 +66,7 @@ async function seed() {
   await db.delete(schema.projects);
   await db.delete(schema.behavioralScores);
   await db.delete(schema.assessments);
+  await db.delete(schema.assessmentPeriods);
   await db.delete(schema.employeeSkills);
   await db.delete(schema.employees);
   await db.delete(schema.skills);
@@ -165,11 +166,12 @@ async function seed() {
   const insertedEmployees = await db.insert(schema.employees).values(employeeInserts).returning();
 
   console.log("Generate Periods...");
-  const [activePeriod] = await db.insert(schema.periods).values({
+  const [activePeriod] = await db.insert(schema.assessmentPeriods).values({
     name: "Mei 2026",
     status: "active",
     startDate: new Date("2026-05-01"),
     endDate: new Date("2026-05-31"),
+    isCurrent: true,
   }).returning();
 
   console.log("Generate Employee Skills & Assessments (dengan Trade-off)...");
