@@ -4,7 +4,7 @@
 
 import { NextRequest } from "next/server";
 import { db } from "@/db";
-import { employees, employeeSkills, skills, behavioralScores, assessments, teamMembers, teamCandidates, projects, user } from "@/db/schema";
+import { employees, employeeSkills, skills, behavioralScores, assessments, teamMembers, teamCandidates, projects, user, departments, positions, assessmentPeriods } from "@/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 
 export async function GET(
@@ -19,15 +19,20 @@ export async function GET(
       id: employees.id,
       userId: employees.userId,
       employeeCode: employees.employeeCode,
-      department: employees.department,
-      position: employees.position,
+      departmentId: employees.departmentId,
+      positionId: employees.positionId,
+      department: departments.name, // Get name from joined table
+      position: positions.name, // Get name from joined table
       jobLevel: employees.jobLevel,
       status: employees.status,
       name: user.name,
       email: user.email,
+      image: user.image,
     })
     .from(employees)
     .leftJoin(user, eq(employees.userId, user.id))
+    .leftJoin(departments, eq(employees.departmentId, departments.id))
+    .leftJoin(positions, eq(employees.positionId, positions.id))
     .where(eq(employees.id, empId));
 
   if (!employee) {
@@ -66,8 +71,20 @@ export async function GET(
     .where(eq(behavioralScores.employeeId, empId));
 
   const empAssessments = await db
-    .select()
+    .select({
+      id: assessments.id,
+      assessorName: assessments.assessorName,
+      employeeId: assessments.employeeId,
+      assessmentType: assessments.assessmentType,
+      emotionalStability: assessments.emotionalStability,
+      communication: assessments.communication,
+      teamwork: assessments.teamwork,
+      adaptability: assessments.adaptability,
+      periodName: assessmentPeriods.name,
+      createdAt: assessments.createdAt,
+    })
     .from(assessments)
+    .leftJoin(assessmentPeriods, eq(assessments.periodId, assessmentPeriods.id))
     .where(eq(assessments.employeeId, empId));
 
   return Response.json({

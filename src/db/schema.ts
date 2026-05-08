@@ -12,6 +12,8 @@ import {
   numeric,
   varchar,
   unique,
+  index,
+  AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 // ─── Better Auth Managed Tables ─────────────────────────────
@@ -39,7 +41,9 @@ export const session = pgTable("session", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-});
+}, (t) => [
+  index("session_user_id_idx").on(t.userId),
+]);
 
 export const account = pgTable("account", {
   id: text("id").primaryKey(),
@@ -57,7 +61,9 @@ export const account = pgTable("account", {
   password: text("password"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  index("account_user_id_idx").on(t.userId),
+]);
 
 export const verification = pgTable("verification", {
   id: text("id").primaryKey(),
@@ -70,16 +76,46 @@ export const verification = pgTable("verification", {
 
 // ─── KiCob Application Tables ───────────────────────────────
 
+export const departments = pgTable("departments", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  parentId: integer("parent_id").references((): AnyPgColumn => departments.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const positions = pgTable("positions", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  jobLevel: integer("job_level").notNull().default(1),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const assessmentPeriods = pgTable("assessment_periods", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // e.g., "Mei 2026"
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  status: text("status").notNull().default("active"), // active | closed | locked
+  isCurrent: boolean("is_current").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const employees = pgTable("employees", {
   id: serial("id").primaryKey(),
   userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
   employeeCode: varchar("employee_code", { length: 20 }).notNull().unique(),
-  department: text("department").notNull(),
-  position: text("position").notNull(),
+  departmentId: integer("department_id").references(() => departments.id),
+  positionId: integer("position_id").references(() => positions.id),
+  supervisorId: integer("supervisor_id").references((): AnyPgColumn => employees.id),
   jobLevel: integer("job_level").notNull().default(1), // 1: Staff, 2: Supervisor, 3: Manager, 4: Director
   status: text("status").notNull().default("active"), // active | inactive
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  index("employees_user_id_idx").on(t.userId),
+  index("employees_dept_id_idx").on(t.departmentId),
+  index("employees_pos_id_idx").on(t.positionId),
+  index("employees_supervisor_id_idx").on(t.supervisorId),
+]);
 
 export const skills = pgTable("skills", {
   id: serial("id").primaryKey(),
@@ -116,10 +152,13 @@ export const assessments = pgTable("assessments", {
   consistencyScore: numeric("consistency_score", { precision: 5, scale: 2 })
     .notNull()
     .default("0"),
-  period: text("period").notNull(), // e.g., "Mei 2026"
+  periodId: integer("period_id").references(() => assessmentPeriods.id),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  index("assessments_employee_id_idx").on(t.employeeId),
+  index("assessments_period_id_idx").on(t.periodId),
+]);
 
 export const behavioralScores = pgTable("behavioral_scores", {
   id: serial("id").primaryKey(),
@@ -132,7 +171,9 @@ export const behavioralScores = pgTable("behavioral_scores", {
   avgAdaptability: numeric("avg_adaptability", { precision: 5, scale: 2 }).notNull(),
   finalBehaviorScore: numeric("final_behavior_score", { precision: 5, scale: 2 }).notNull(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  index("behavioral_scores_employee_id_idx").on(t.employeeId),
+]);
 
 export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
@@ -148,7 +189,9 @@ export const projects = pgTable("projects", {
     .default("0.40"),
   status: text("status").notNull().default("draft"), // draft | active | completed
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  index("projects_created_by_idx").on(t.createdBy),
+]);
 
 export const projectRequirements = pgTable(
   "project_requirements",
@@ -163,7 +206,10 @@ export const projectRequirements = pgTable(
     requiredLevel: integer("required_level").notNull().default(3),
     isMandatory: boolean("is_mandatory").notNull().default(false),
   },
-  (t) => [unique("unique_project_requirement").on(t.projectId, t.skillId)]
+  (t) => [
+    unique("unique_project_requirement").on(t.projectId, t.skillId),
+    index("project_reqs_skill_id_idx").on(t.skillId),
+  ]
 );
 
 export const teamCandidates = pgTable("team_candidates", {
@@ -174,7 +220,9 @@ export const teamCandidates = pgTable("team_candidates", {
   totalScore: numeric("total_score", { precision: 5, scale: 2 }).notNull(),
   ranking: integer("ranking").notNull(),
   generatedAt: timestamp("generated_at").notNull().defaultNow(),
-});
+}, (t) => [
+  index("team_candidates_project_id_idx").on(t.projectId),
+]);
 
 export const teamMembers = pgTable(
   "team_members",
@@ -190,7 +238,10 @@ export const teamMembers = pgTable(
     hardSkillScore: numeric("hard_skill_score", { precision: 5, scale: 2 }),
     softFactorScore: numeric("soft_factor_score", { precision: 5, scale: 2 }),
   },
-  (t) => [unique("unique_team_candidate_member").on(t.teamCandidateId, t.employeeId)]
+  (t) => [
+    unique("unique_team_candidate_member").on(t.teamCandidateId, t.employeeId),
+    index("team_members_employee_id_idx").on(t.employeeId),
+  ]
 );
 
 export const recommendationHistory = pgTable("recommendation_history", {
@@ -202,4 +253,7 @@ export const recommendationHistory = pgTable("recommendation_history", {
   decisionNote: text("decision_note").notNull().default(""),
   status: text("status").notNull().default("pending"), // approved | rejected | adjusted | pending
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  index("rec_history_project_id_idx").on(t.projectId),
+  index("rec_history_approved_by_idx").on(t.approvedBy),
+]);

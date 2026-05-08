@@ -22,73 +22,95 @@ import {
 import { KpiCard } from "@/components/kpi-card";
 import { SkillRadarChart } from "@/components/skill-radar-chart";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function DashboardPage() {
   const { data: employees } = useSWR<any[]>("/api/employees", fetcher);
   const { data: projects } = useSWR<any[]>("/api/projects", fetcher);
-  const { data: recommendations } = useSWR<any[]>("/api/recommendations", fetcher);
   const { data: assessments } = useSWR<any[]>("/api/assessments", fetcher);
 
-  // Stats
-  const totalEmployees = employees ? employees.filter((e) => e.status === "active").length : 0;
-  const activeProjects = projects ? projects.filter((p) => p.status === "active").length : 0;
-  
-  // Current period (e.g., "Mei 2026")
-  const currentPeriod = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date());
-
-  // Pending assessments: active employees who have < 3 assessments in the CURRENT period
-  const pendingAssessments = assessments 
-    ? assessments.filter((emp: any) => {
-        if (emp.status !== 'active') return false;
-        const currentAsmts = (emp.assessments || []).filter((a: any) => a.period === currentPeriod);
-        return currentAsmts.length < 3;
-      }).length 
+  // ── KPI: Karyawan Aktif ────────────────────────────────────────────────
+  const totalEmployees = employees
+    ? employees.filter((e) => e.status === "active").length
     : 0;
 
-  // Organizational Performance: Average of all finalBehaviorScores
-  const activeScores = employees?.filter(e => e.behavioralScore).map(e => Number(e.behavioralScore.finalBehaviorScore)) || [];
-  const avgOrgScore = activeScores.length > 0 
-    ? activeScores.reduce((a, b) => a + b, 0) / activeScores.length 
+  // ── KPI: Proyek Aktif ─────────────────────────────────────────────────
+  const activeProjects = projects
+    ? projects.filter((p) => p.status === "active").length
     : 0;
 
-  // Top Employees by Behavioral Score
+  // ── KPI: Assessment Pending ──────────────────────────────────────────
+  // Hitung karyawan aktif yang belum memiliki semua tipe assessment (self, peer, supervisor)
+  // dalam periode apapun yang aktif. Jika totalAssessments < 3, dianggap pending.
+  const REQUIRED_ASSESSMENT_TYPES = 3; // self + peer + supervisor (minimal)
+  const pendingAssessments = assessments
+    ? assessments.filter(
+        (emp: any) =>
+          emp.status === "active" &&
+          (emp.totalAssessments ?? 0) < REQUIRED_ASSESSMENT_TYPES
+      ).length
+    : 0;
+
+  // ── KPI: Rata-rata Skor Organisasi ────────────────────────────────────
+  const activeScores =
+    employees
+      ?.filter((e) => e.behavioralScore)
+      .map((e) => Number(e.behavioralScore.finalBehaviorScore)) || [];
+  const avgOrgScore =
+    activeScores.length > 0
+      ? activeScores.reduce((a, b) => a + b, 0) / activeScores.length
+      : 0;
+
+  // ── Top 5 Karyawan berdasarkan Skor Perilaku ──────────────────────────
   const topEmployees = employees
     ? [...employees]
-        .filter(e => e.behavioralScore)
-        .sort((a, b) => Number(b.behavioralScore.finalBehaviorScore) - Number(a.behavioralScore.finalBehaviorScore))
+        .filter((e) => e.behavioralScore)
+        .sort(
+          (a, b) =>
+            Number(b.behavioralScore.finalBehaviorScore) -
+            Number(a.behavioralScore.finalBehaviorScore)
+        )
         .slice(0, 5)
     : [];
 
-  // Behavioral chart data
+  // ── Bar Chart: Data Skor per Dimensi ─────────────────────────────────
   const behaviorChartData = employees
     ? employees
         .filter((e) => e.behavioralScore)
         .slice(0, 8)
         .map((e) => ({
           name: e.name.split(" ")[0],
-          "Emosional": Number(e.behavioralScore.avgEmotionalStability),
-          "Komunikasi": Number(e.behavioralScore.avgCommunication),
+          Emosional: Number(e.behavioralScore.avgEmotionalStability),
+          Komunikasi: Number(e.behavioralScore.avgCommunication),
           "Kerja Tim": Number(e.behavioralScore.avgTeamwork),
-          "Adaptasi": Number(e.behavioralScore.avgAdaptability),
+          Adaptasi: Number(e.behavioralScore.avgAdaptability),
         }))
     : [];
 
-  // Organizational Average for Radar
+  // ── Radar Chart: Rata-rata Organisasi ────────────────────────────────
   const getAvg = (key: string) => {
-    const scores = employees?.filter(e => e.behavioralScore).map(e => Number(e.behavioralScore[key])) || [];
-    return scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+    const scores =
+      employees
+        ?.filter((e) => e.behavioralScore)
+        .map((e) => Number(e.behavioralScore[key])) || [];
+    return scores.length > 0
+      ? scores.reduce((a, b) => a + b, 0) / scores.length
+      : 0;
   };
 
   const radarData = [
-    { subject: "Emosional", value: getAvg("avgEmotionalStability"), fullMark: 5 },
+    {
+      subject: "Emosional",
+      value: getAvg("avgEmotionalStability"),
+      fullMark: 5,
+    },
     { subject: "Komunikasi", value: getAvg("avgCommunication"), fullMark: 5 },
     { subject: "Kerja Tim", value: getAvg("avgTeamwork"), fullMark: 5 },
     { subject: "Adaptasi", value: getAvg("avgAdaptability"), fullMark: 5 },
     { subject: "Final Score", value: avgOrgScore, fullMark: 5 },
   ];
-  
 
   return (
     <div className="space-y-6">
@@ -104,33 +126,30 @@ export default function DashboardPage() {
         </p>
       </motion.div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards – tanpa nilai trend statis */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           title="Total Karyawan Aktif"
           value={totalEmployees}
           icon={Users}
-          trend={{ value: 5, label: "bulan ini" }}
           delay={0}
         />
         <KpiCard
           title="Proyek Aktif"
           value={activeProjects}
           icon={FolderKanban}
-          trend={{ value: 12, label: "bulan ini" }}
           delay={0.1}
         />
         <KpiCard
-          title="Assessment Pending"
+          title="Karyawan Belum Dinilai"
           value={pendingAssessments}
           icon={ClipboardCheck}
           delay={0.2}
         />
         <KpiCard
           title="Rata-rata Skor Organisasi"
-          value={Number(avgOrgScore.toFixed(1))}
+          value={Number(avgOrgScore.toFixed(2))}
           icon={TrendingUp}
-          trend={{ value: 3.2, label: "vs bulan lalu" }}
           delay={0.3}
         />
       </div>
@@ -166,6 +185,8 @@ export default function DashboardPage() {
                   axisLine={{ stroke: "oklch(0.3 0.04 260 / 20%)" }}
                 />
                 <Tooltip
+                  cursor={{ fill: "oklch(0.2 0.05 260 / 15%)" }}
+                  formatter={(value) => (typeof value === "number" ? value.toFixed(2) : value)}
                   contentStyle={{
                     background: "oklch(0.16 0.04 260 / 90%)",
                     border: "1px solid oklch(0.4 0.08 260 / 30%)",
@@ -222,7 +243,7 @@ export default function DashboardPage() {
         </motion.div>
       </div>
 
-      {/* Recommendation Table */}
+      {/* Top Employees Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -261,13 +282,16 @@ export default function DashboardPage() {
                     Departemen
                   </th>
                   <th className="text-center text-xs font-medium text-muted-foreground py-3 px-3">
-                    ES
+                    Emosional
                   </th>
                   <th className="text-center text-xs font-medium text-muted-foreground py-3 px-3">
-                    CM
+                    Komunikasi
                   </th>
                   <th className="text-center text-xs font-medium text-muted-foreground py-3 px-3">
-                    TW
+                    Kerja Tim
+                  </th>
+                  <th className="text-center text-xs font-medium text-muted-foreground py-3 px-3">
+                    Adaptasi
                   </th>
                   <th className="text-center text-xs font-medium text-muted-foreground py-3 px-3">
                     Total
@@ -290,12 +314,18 @@ export default function DashboardPage() {
                     </td>
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-sm font-semibold">
-                          {member.name?.charAt(0) || "U"}
-                        </div>
-                        <span className="font-medium text-sm">
+                        <Avatar className="w-8 h-8 rounded-full border border-primary/10">
+                          <AvatarImage src={member.image || ""} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                            {member.name?.charAt(0) || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <Link
+                          href={`/karyawan/${member.id}`}
+                          className="font-medium text-sm hover:text-primary transition-colors"
+                        >
                           {member.name}
-                        </span>
+                        </Link>
                       </div>
                     </td>
                     <td className="py-3 px-3 text-sm text-muted-foreground">
@@ -303,17 +333,26 @@ export default function DashboardPage() {
                     </td>
                     <td className="py-3 px-3 text-center">
                       <span className="text-xs text-muted-foreground font-mono">
-                        {Number(member.behavioralScore.avgEmotionalStability).toFixed(1)}
+                        {Number(
+                          member.behavioralScore.avgEmotionalStability
+                        ).toFixed(2)}
                       </span>
                     </td>
                     <td className="py-3 px-3 text-center">
                       <span className="text-xs text-muted-foreground font-mono">
-                        {Number(member.behavioralScore.avgCommunication).toFixed(1)}
+                        {Number(
+                          member.behavioralScore.avgCommunication
+                        ).toFixed(2)}
                       </span>
                     </td>
                     <td className="py-3 px-3 text-center">
                       <span className="text-xs text-muted-foreground font-mono">
-                        {Number(member.behavioralScore.avgTeamwork).toFixed(1)}
+                        {Number(member.behavioralScore.avgTeamwork).toFixed(2)}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {Number(member.behavioralScore.avgAdaptability).toFixed(2)}
                       </span>
                     </td>
                     <td className="py-3 px-3 text-center">
@@ -321,7 +360,9 @@ export default function DashboardPage() {
                         variant="secondary"
                         className="bg-primary/10 text-primary border-primary/20 font-bold text-xs"
                       >
-                        {Number(member.behavioralScore.finalBehaviorScore).toFixed(1)}
+                        {Number(
+                          member.behavioralScore.finalBehaviorScore
+                        ).toFixed(2)}
                       </Badge>
                     </td>
                   </motion.tr>

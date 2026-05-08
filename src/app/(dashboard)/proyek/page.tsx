@@ -195,9 +195,19 @@ export default function ProyekPage() {
             Memuat data proyek...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="col-span-full flex items-center justify-center py-12 text-muted-foreground">
-            Tidak ada proyek yang ditemukan.
-          </div>
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="col-span-full text-center py-24 glass-card rounded-3xl border-dashed bg-slate-900/20"
+          >
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-primary/60" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground">Proyek Kosong</h3>
+            <p className="text-sm text-muted-foreground max-w-[250px] mx-auto mt-1">
+              Tidak ada proyek yang ditemukan dengan kata kunci pencarian tersebut.
+            </p>
+          </motion.div>
         ) : (
           filtered.map((project, i) => {
             const reqs = project.requirements || [];

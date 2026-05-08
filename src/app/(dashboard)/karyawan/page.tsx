@@ -8,6 +8,7 @@ import { Plus, Search, Filter, Mail, Building2, UserCircle, Trash2, ArrowRight, 
 import { useAuth } from "@/lib/auth-context";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -38,10 +39,13 @@ export default function KaryawanPage() {
   const [deptFilter, setDeptFilter] = useState("Semua Departemen");
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const { data: departmentsMaster } = useSWR<any[]>("/api/departments", fetcher);
+  const { data: positionsMaster } = useSWR<any[]>("/api/positions", fetcher);
+
   // Form state
   const [formUserId, setFormUserId] = useState("");
-  const [formDept, setFormDept] = useState("");
-  const [formPosition, setFormPosition] = useState("");
+  const [formDeptId, setFormDeptId] = useState("");
+  const [formPosId, setFormPosId] = useState("");
   const [formJobLevel, setFormJobLevel] = useState("1");
   const [editingEmp, setEditingEmp] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,7 +72,7 @@ export default function KaryawanPage() {
     : [];
 
   const handleAddEmployee = async () => {
-    if (!formUserId || !formDept || !formPosition) return;
+    if (!formUserId || !formDeptId || !formPosId) return;
     setIsSubmitting(true);
 
     const newCode = `EMP${String((employees?.length || 0) + 1).padStart(3, "0")}`;
@@ -79,8 +83,10 @@ export default function KaryawanPage() {
       body: JSON.stringify({
         userId: formUserId,
         employeeCode: newCode,
-        department: formDept,
-        position: formPosition,
+        departmentId: Number(formDeptId),
+        positionId: Number(formPosId),
+        department: departmentsMaster?.find(d => String(d.id) === formDeptId)?.name,
+        position: positionsMaster?.find(p => String(p.id) === formPosId)?.name,
         jobLevel: formJobLevel,
         status: "active",
       }),
@@ -89,8 +95,8 @@ export default function KaryawanPage() {
     await mutate();
     
     setFormUserId("");
-    setFormDept("");
-    setFormPosition("");
+    setFormDeptId("");
+    setFormPosId("");
     setIsSubmitting(false);
     setDialogOpen(false);
   };
@@ -117,8 +123,10 @@ export default function KaryawanPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          department: formDept,
-          position: formPosition,
+          departmentId: Number(formDeptId),
+          positionId: Number(formPosId),
+          department: departmentsMaster?.find(d => String(d.id) === formDeptId)?.name,
+          position: positionsMaster?.find(p => String(p.id) === formPosId)?.name,
           jobLevel: Number(formJobLevel),
         }),
       });
@@ -188,26 +196,39 @@ export default function KaryawanPage() {
                 
                 <div className="space-y-2">
                   <Label>Departemen</Label>
-                  <Select value={formDept} onValueChange={(v) => v && setFormDept(v)}>
+                  <Select value={formDeptId} onValueChange={(v) => v && setFormDeptId(v)}>
                     <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-12">
-                      <SelectValue placeholder="Pilih Departemen" />
+                      <SelectValue placeholder="Pilih Departemen">
+                        {departmentsMaster?.find(d => String(d.id) === formDeptId)?.name}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)]">
-                      {["IT Ops", "Engineering", "Marketing", "HR", "Sales", "Finance", "Legal"].map((d) => (
-                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                      {departmentsMaster?.map((d) => (
+                        <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
                       ))}
+                      {(!departmentsMaster || departmentsMaster.length === 0) && (
+                        <div className="p-2 text-xs text-center text-muted-foreground">Belum ada departemen</div>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="emp-pos">Posisi</Label>
-                  <Input
-                    id="emp-pos"
-                    value={formPosition}
-                    onChange={(e) => setFormPosition(e.target.value)}
-                    placeholder="Contoh: Frontend Developer"
-                    className="bg-input/30 border-border/30 rounded-xl h-12"
-                  />
+                  <Label>Posisi / Jabatan</Label>
+                  <Select value={formPosId} onValueChange={(v) => v && setFormPosId(v)}>
+                    <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-12">
+                      <SelectValue placeholder="Pilih Jabatan">
+                        {positionsMaster?.find(p => String(p.id) === formPosId)?.name}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)] min-w-[280px]">
+                      {positionsMaster?.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                      ))}
+                      {(!positionsMaster || positionsMaster.length === 0) && (
+                        <div className="p-2 text-xs text-center text-muted-foreground">Belum ada jabatan</div>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
                   <div className="space-y-2">
                     <Label>Level Jabatan</Label>
@@ -229,7 +250,7 @@ export default function KaryawanPage() {
                   </DialogClose>
                   <Button
                     onClick={handleAddEmployee}
-                    disabled={!formUserId || !formDept || !formPosition || !formJobLevel || isSubmitting}
+                    disabled={!formUserId || !formDeptId || !formPosId || !formJobLevel || isSubmitting}
                     className="flex-1 glow-button text-white rounded-xl font-semibold h-12"
                   >
                     {isSubmitting ? "Menyimpan..." : "Simpan Karyawan"}
@@ -315,9 +336,12 @@ export default function KaryawanPage() {
                   >
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
-                          {emp.name?.charAt(0) || "U"}
-                        </div>
+                        <Avatar className="w-9 h-9 rounded-full border border-primary/10">
+                          <AvatarImage src={emp.image || ""} />
+                          <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
+                            {emp.name?.charAt(0) || "U"}
+                          </AvatarFallback>
+                        </Avatar>
                         <div>
                           <p className="font-medium text-sm">{emp.name || "Unknown User"}</p>
                           <p className="text-xs text-muted-foreground">{emp.email || "no-email@kicob.id"}</p>
@@ -382,8 +406,8 @@ export default function KaryawanPage() {
                             size="sm"
                             onClick={() => {
                               setEditingEmp(emp);
-                              setFormDept(emp.department);
-                              setFormPosition(emp.position);
+                              setFormDeptId(String(emp.departmentId || ""));
+                              setFormPosId(String(emp.positionId || ""));
                               setFormJobLevel(String(emp.jobLevel));
                             }}
                             className="text-amber-400 hover:bg-amber-500/10 h-8 w-8 p-0 ml-1"
@@ -409,10 +433,19 @@ export default function KaryawanPage() {
         )}
 
         {!isLoading && filtered.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground text-sm flex flex-col items-center gap-3">
-             <User className="w-8 h-8 opacity-20" />
-             Tidak ada karyawan yang cocok dengan pencarian.
-          </div>
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="text-center py-24 glass-card rounded-3xl border-dashed bg-slate-900/20"
+          >
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <User className="w-8 h-8 text-primary/60" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground">Data Karyawan Kosong</h3>
+            <p className="text-sm text-muted-foreground max-w-[250px] mx-auto mt-1">
+              Tidak ada karyawan yang cocok dengan pencarian atau filter saat ini.
+            </p>
+          </motion.div>
         )}
       </motion.div>
 
@@ -439,26 +472,34 @@ export default function KaryawanPage() {
 
               <div className="space-y-2">
                 <Label>Departemen</Label>
-                <Select value={formDept} onValueChange={(v) => v && setFormDept(v)}>
+                <Select value={formDeptId} onValueChange={(v) => v && setFormDeptId(v)}>
                   <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-12">
-                    <SelectValue />
+                    <SelectValue>
+                      {departmentsMaster?.find(d => String(d.id) === formDeptId)?.name || positionsMaster?.find(p => String(p.id) === formPosId)?.name}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)]">
-                    {["IT Ops", "Engineering", "Marketing", "HR", "Sales", "Finance", "Legal"].map((d) => (
-                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    {departmentsMaster?.map((d) => (
+                      <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-pos">Posisi</Label>
-                <Input
-                  id="edit-pos"
-                  value={formPosition}
-                  onChange={(e) => setFormPosition(e.target.value)}
-                  className="bg-input/30 border-border/30 rounded-xl h-12"
-                />
+                <Label>Posisi / Jabatan</Label>
+                <Select value={formPosId} onValueChange={(v) => v && setFormPosId(v)}>
+                  <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-12">
+                    <SelectValue>
+                      {departmentsMaster?.find(d => String(d.id) === formDeptId)?.name || positionsMaster?.find(p => String(p.id) === formPosId)?.name}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)] min-w-[280px]">
+                    {positionsMaster?.map((p) => (
+                      <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

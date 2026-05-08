@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { db } from "@/db";
-import { assessments, behavioralScores, employees, user } from "@/db/schema";
+import { assessments, behavioralScores, employees, user, assessmentPeriods, departments, positions } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
@@ -21,16 +21,27 @@ export async function GET(request: NextRequest) {
       id: employees.id,
       userId: employees.userId,
       employeeCode: employees.employeeCode,
-      department: employees.department,
-      position: employees.position,
+      department: departments.name,
+      position: positions.name,
       status: employees.status,
       name: user.name,
       email: user.email,
     })
     .from(employees)
-    .leftJoin(user, eq(employees.userId, user.id));
+    .leftJoin(user, eq(employees.userId, user.id))
+    .leftJoin(departments, eq(employees.departmentId, departments.id))
+    .leftJoin(positions, eq(employees.positionId, positions.id));
 
-  const allAssessments = await db.select().from(assessments);
+  const allAssessments = await db
+    .select({
+      id: assessments.id,
+      assessorName: assessments.assessorName,
+      employeeId: assessments.employeeId,
+      assessmentType: assessments.assessmentType,
+      periodName: assessmentPeriods.name, // To replace the deleted 'period' column
+    })
+    .from(assessments)
+    .leftJoin(assessmentPeriods, eq(assessments.periodId, assessmentPeriods.id));
 
   const grouped = allEmployees.map((emp) => {
     const empAssessments = allAssessments.filter((a) => a.employeeId === emp.id);
@@ -58,7 +69,20 @@ export async function POST(request: NextRequest) {
     notes,
   } = body;
 
-  const currentPeriod = period || new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date());
+  // Get the currently active period from database
+  const activePeriod = await db.query.assessmentPeriods.findFirst({
+    where: eq(assessmentPeriods.isCurrent, true)
+  });
+
+  // BLOCK: If period is closed or locked, refuse new assessments
+  if (activePeriod && activePeriod.status !== "active") {
+    return Response.json({ 
+      error: `Periode ${activePeriod.name} saat ini sedang ${activePeriod.status === 'closed' ? 'ditutup' : 'dikunci'}. Penilaian baru tidak diizinkan.` 
+    }, { status: 403 });
+  }
+
+  const currentPeriodName = activePeriod?.name || period || new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date());
+  const currentPeriodId = activePeriod?.id || null;
 
   if (!assessorName || !employeeId || !assessmentType) {
     return Response.json({ error: "Missing required fields" }, { status: 400 });
@@ -74,7 +98,7 @@ export async function POST(request: NextRequest) {
       and(
         eq(assessments.employeeId, empId),
         eq(assessments.assessorName, assessorName),
-        eq(assessments.period, currentPeriod)
+        currentPeriodId ? eq(assessments.periodId, currentPeriodId) : undefined
       )
     );
   
@@ -98,7 +122,7 @@ export async function POST(request: NextRequest) {
       teamwork: teamwork.toString(),
       adaptability: adaptability.toString(),
       consistencyScore: (Math.round(consistencyScore * 100) / 100).toString(),
-      period: currentPeriod,
+      periodId: currentPeriodId,
       notes: notes || null,
     })
     .returning();
@@ -108,6 +132,7 @@ export async function POST(request: NextRequest) {
 
   const weightedCalc = {
     supervisor: { es: 0, cm: 0, tw: 0, ad: 0, count: 0, weight: 0.5 },
+    upward: { es: 0, cm: 0, tw: 0, ad: 0, count: 0, weight: 0.5 },
     peer: { es: 0, cm: 0, tw: 0, ad: 0, count: 0, weight: 0.3 },
     self: { es: 0, cm: 0, tw: 0, ad: 0, count: 0, weight: 0.2 },
   };

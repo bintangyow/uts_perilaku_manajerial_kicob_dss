@@ -16,7 +16,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -180,6 +180,7 @@ export function AppSidebar() {
               }
             >
                 <Avatar className="w-9 h-9 border border-primary/30">
+                  <AvatarImage src={currentUser.image || ""} />
                   <AvatarFallback className="bg-primary/20 text-primary text-sm font-semibold">
                     {currentUser.name.charAt(0)}
                   </AvatarFallback>
@@ -208,6 +209,14 @@ export function AppSidebar() {
                   {currentUser.email}
                 </p>
               </div>
+              <DropdownMenuSeparator className="bg-border/30" />
+              <DropdownMenuItem
+                render={<Link href="/profil" />}
+                className="cursor-pointer"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Profil & Akun
+              </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-border/30" />
               <DropdownMenuItem
                 onClick={async () => {

@@ -12,6 +12,8 @@ import {
   teamMembers,
   employees,
   user,
+  positions,
+  departments,
 } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -61,12 +63,14 @@ export async function GET(
           hardSkillScore: teamMembers.hardSkillScore,
           softFactorScore: teamMembers.softFactorScore,
           employeeName: user.name,
-          employeePosition: employees.position,
-          employeeDepartment: employees.department,
+          employeePosition: positions.name,
+          employeeDepartment: departments.name,
         })
         .from(teamMembers)
         .innerJoin(employees, eq(teamMembers.employeeId, employees.id))
         .leftJoin(user, eq(employees.userId, user.id))
+        .leftJoin(positions, eq(employees.positionId, positions.id))
+        .leftJoin(departments, eq(employees.departmentId, departments.id))
         .where(eq(teamMembers.teamCandidateId, tc.id));
 
       return { ...tc, members };

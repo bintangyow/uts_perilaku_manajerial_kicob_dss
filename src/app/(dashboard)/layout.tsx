@@ -17,6 +17,7 @@ const pathLabels: Record<string, string> = {
   rekomendasi: "Rekomendasi",
   riwayat: "Riwayat",
   pengaturan: "Pengaturan",
+  profil: "Profil",
 };
 
 export default function DashboardLayout({

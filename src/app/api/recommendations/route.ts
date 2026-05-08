@@ -13,6 +13,7 @@ import {
   employeeSkills,
   behavioralScores,
   user,
+  positions,
 } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -23,10 +24,11 @@ export async function GET() {
     .select({
       id: employees.id,
       name: user.name,
-      position: employees.position,
+      position: positions.name,
     })
     .from(employees)
-    .leftJoin(user, eq(employees.userId, user.id));
+    .leftJoin(user, eq(employees.userId, user.id))
+    .leftJoin(positions, eq(employees.positionId, positions.id));
 
   const result = allCandidates.map((candidate) => {
     const candidateMembers = allMembers
@@ -128,7 +130,7 @@ export async function POST(request: NextRequest) {
           .from(behavioralScores)
           .where(eq(behavioralScores.employeeId, emp.id));
 
-        let softFactorSum = 60;
+        let softFactorSum = 0;
         if (scores.length > 0) {
           const total = scores.reduce((sum, s) => sum + (Number(s.finalBehaviorScore) || 0), 0);
           softFactorSum = (total / (scores.length * 5)) * 100;

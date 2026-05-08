@@ -87,22 +87,22 @@ export default function RiwayatPage() {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-2 p-2 rounded-2xl bg-slate-900/40 border border-border/10">
+      <div className="inline-flex flex-wrap items-center gap-1 p-1.5 rounded-2xl bg-slate-900/40 border border-border/10">
         <Button 
-          variant={filter === "all" ? "default" : "ghost"}
+          variant="ghost"
           size="sm"
           onClick={() => setFilter("all")}
-          className="rounded-xl text-xs h-8 px-4"
+          className={`rounded-xl text-xs h-8 px-4 transition-all ${filter === "all" ? 'bg-white/10 text-white shadow-sm' : 'text-muted-foreground hover:bg-white/5 hover:text-white'}`}
         >
           Semua
         </Button>
         {Object.entries(statusConfig).map(([key, config]) => (
           <Button 
             key={key}
-            variant={filter === key ? "default" : "ghost"}
+            variant="ghost"
             size="sm"
             onClick={() => setFilter(key)}
-            className={`rounded-xl text-xs h-8 px-4 ${filter === key ? 'glow-button text-white' : ''}`}
+            className={`rounded-xl text-xs h-8 px-4 transition-all ${filter === key ? 'bg-white/10 text-white shadow-sm' : 'text-muted-foreground hover:bg-white/5 hover:text-white'}`}
           >
             {config.label}
           </Button>
@@ -196,19 +196,19 @@ export default function RiwayatPage() {
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
-            className="text-center py-24 glass-card rounded-3xl border-dashed"
+            className="text-center py-24 glass-card rounded-3xl border-dashed bg-slate-900/20"
           >
-            <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4">
-              <History className="w-8 h-8 text-primary/20" />
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <History className="w-8 h-8 text-primary/60" />
             </div>
-            <h3 className="text-lg font-semibold">Arsip Kosong</h3>
+            <h3 className="text-lg font-semibold text-foreground">Arsip Kosong</h3>
             <p className="text-sm text-muted-foreground max-w-[250px] mx-auto mt-1">
-              Tidak ada riwayat untuk kategori <span className="text-primary font-bold">"{filter}"</span>.
+              Tidak ada riwayat untuk kategori <span className="text-primary font-bold">"{filter === 'all' ? 'Semua' : statusConfig[filter]?.label}"</span>.
             </p>
             <Button 
               variant="outline" 
               onClick={() => setFilter("all")}
-              className="mt-6 rounded-xl text-xs h-9"
+              className="mt-6 rounded-xl text-xs h-9 border-border/20 hover:bg-white/5"
             >
               Tampilkan Semua Riwayat
             </Button>

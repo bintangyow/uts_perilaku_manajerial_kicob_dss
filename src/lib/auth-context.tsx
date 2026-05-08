@@ -4,7 +4,7 @@ import React, { createContext, useContext, useCallback } from "react";
 import { authClient } from "./auth-client";
 
 interface AuthContextType {
-  currentUser: { id: string; name: string; email: string; role: string } | null;
+  currentUser: { id: string; name: string; email: string; role: string; image?: string | null } | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ error?: string }>;
@@ -23,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: session.user.id,
         name: session.user.name,
         email: session.user.email,
+        image: session.user.image,
         role: (session.user as Record<string, unknown>).role as string ?? "reviewer",
       }
     : null;

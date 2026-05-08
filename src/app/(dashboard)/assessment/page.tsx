@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import useSWR from "swr";
@@ -24,34 +24,38 @@ export default function AssessmentPage() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("Semua Status");
 
-  // Generate dynamic periods (current month + 5 months back)
-  const generatePeriods = () => {
-    const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    const now = new Date();
-    const result = [];
-    for (let i = 0; i < 6; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      result.push(`${months[d.getMonth()]} ${d.getFullYear()}`);
+  const { data: periodsData } = useSWR<any[]>("/api/periods", fetcher);
+  const activePeriod = periodsData?.find(p => p.isCurrent);
+  
+  const [periodFilter, setPeriodFilter] = useState("");
+
+  // Set initial period filter to active period once loaded
+  useEffect(() => {
+    if (activePeriod && !periodFilter) {
+      setPeriodFilter(activePeriod.name);
+    } else if (periodsData && periodsData.length > 0 && !periodFilter) {
+      setPeriodFilter(periodsData[0].name);
     }
-    return result;
-  };
-  const periods = generatePeriods();
-  const [periodFilter, setPeriodFilter] = useState(periods[0]);
+  }, [activePeriod, periodsData]);
 
   // Create assessment overview per employee for the SELECTED period
   const empAssessmentList = employeesData
     ? employeesData
         .filter((e) => e.status === "active")
         .map((emp) => {
-          const empAsmts = (emp.assessments || []).filter((a: any) => a.period === periodFilter);
+          const empAsmts = (emp.assessments || []).filter((a: any) => a.periodName === periodFilter);
           const hasSelf = empAsmts.some((a: any) => a.assessmentType === "self");
           const hasPeer = empAsmts.some((a: any) => a.assessmentType === "peer");
           const hasSupervisor = empAsmts.some((a: any) => a.assessmentType === "supervisor");
+          const hasUpward = empAsmts.some((a: any) => a.assessmentType === "upward");
+          
+          // Target assessments: 3 for staff, 4 for anyone with upward potential (simplifying to 3 for badge logic but counting all)
           return {
             ...emp,
             hasSelf,
             hasPeer,
             hasSupervisor,
+            hasUpward,
             totalAssessmentsInPeriod: empAsmts.length,
           };
         })
@@ -101,9 +105,11 @@ export default function AssessmentPage() {
           <SelectTrigger className="w-full sm:w-48 h-10 bg-input/30 border-border/30 rounded-xl">
             <SelectValue placeholder="Pilih Periode" />
           </SelectTrigger>
-          <SelectContent className="border-border/30">
-            {periods.map(p => (
-              <SelectItem key={p} value={p}>{p}</SelectItem>
+          <SelectContent className="border-border/30 bg-slate-950">
+            {periodsData?.map(p => (
+              <SelectItem key={p.id} value={p.name}>
+                {p.name} {p.isCurrent && "(Aktif)"}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -142,6 +148,7 @@ export default function AssessmentPage() {
                   <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">Self</th>
                   <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">Peer</th>
                   <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">Supervisor</th>
+                  <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">Upward</th>
                   <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">Status</th>
                   <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">Aksi</th>
                 </tr>
@@ -189,10 +196,17 @@ export default function AssessmentPage() {
                       )}
                     </td>
                     <td className="py-3 px-4 text-center">
+                      {emp.hasUpward ? (
+                        <ClipboardCheck className="w-4 h-4 mx-auto text-emerald-500" />
+                      ) : (
+                        <span className="text-muted-foreground/30">—</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-center">
                       <Badge
                         variant="secondary"
                         className={`text-[10px] ${
-                          emp.totalAssessmentsInPeriod >= 3
+                          emp.totalAssessmentsInPeriod >= (emp.jobLevel > 1 ? 3 : 3) // simplistic logic, just checking if enough are there
                             ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20"
                             : "bg-amber-500/15 text-amber-400 border-amber-500/20"
                         }`}

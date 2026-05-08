@@ -9,6 +9,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -287,9 +288,12 @@ export default function KaryawanDetailPage({
           className="glass-card rounded-2xl p-6 lg:col-span-1 flex flex-col"
         >
           <div className="text-center mb-6">
-            <div className="w-20 h-20 rounded-2xl bg-primary/15 flex items-center justify-center text-primary text-2xl font-bold mx-auto mb-4">
-              {employee.name.charAt(0)}
-            </div>
+            <Avatar className="w-20 h-20 rounded-full border-2 border-primary/20 mx-auto mb-4">
+              <AvatarImage src={employee.image || ""} />
+              <AvatarFallback className="bg-primary/15 text-primary text-2xl font-bold">
+                {employee.name.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
             <h2 className="text-lg font-bold">{employee.name}</h2>
             <p className="text-sm text-muted-foreground">
               {employee.position}
@@ -558,10 +562,10 @@ export default function KaryawanDetailPage({
                   <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Periode</th>
                   <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Asesor</th>
                   <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Tipe</th>
-                  <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">SE</th>
-                  <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">KM</th>
-                  <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">KT</th>
-                  <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">AD</th>
+                  <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">Emosional</th>
+                  <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">Komunikasi</th>
+                  <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">Kerja Tim</th>
+                  <th className="text-center text-xs font-medium text-muted-foreground py-3 px-4">Adaptasi</th>
                 </tr>
               </thead>
               <tbody>
@@ -575,18 +579,23 @@ export default function KaryawanDetailPage({
                       })}
                     </td>
                     <td className="py-3 px-4 text-sm font-medium text-primary/80">
-                      {a.period}
+                      {a.periodName || "—"}
                     </td>
                     <td className="py-3 px-4 text-sm font-medium">{a.assessorName}</td>
                     <td className="py-3 px-4">
-                      <Badge variant="secondary" className="text-[10px] capitalize">
+                      <Badge 
+                        variant="secondary" 
+                        className={`text-[10px] capitalize ${
+                          a.assessmentType === 'upward' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : ''
+                        }`}
+                      >
                         {a.assessmentType}
                       </Badge>
                     </td>
-                    <td className="py-3 px-4 text-center text-sm">{a.emotionalStability}</td>
-                    <td className="py-3 px-4 text-center text-sm">{a.communication}</td>
-                    <td className="py-3 px-4 text-center text-sm">{a.teamwork}</td>
-                    <td className="py-3 px-4 text-center text-sm">{a.adaptability}</td>
+                    <td className="py-3 px-4 text-center text-sm font-mono">{Number(a.emotionalStability).toFixed(2)}</td>
+                    <td className="py-3 px-4 text-center text-sm font-mono">{Number(a.communication).toFixed(2)}</td>
+                    <td className="py-3 px-4 text-center text-sm font-mono">{Number(a.teamwork).toFixed(2)}</td>
+                    <td className="py-3 px-4 text-center text-sm font-mono">{Number(a.adaptability).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>

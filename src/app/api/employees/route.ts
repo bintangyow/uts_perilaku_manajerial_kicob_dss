@@ -4,7 +4,7 @@
 
 import { NextRequest } from "next/server";
 import { db } from "@/db";
-import { employees, employeeSkills, skills, behavioralScores, user } from "@/db/schema";
+import { employees, employeeSkills, skills, behavioralScores, user, departments, positions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function GET() {
@@ -14,15 +14,20 @@ export async function GET() {
       id: employees.id,
       userId: employees.userId,
       employeeCode: employees.employeeCode,
-      department: employees.department,
-      position: employees.position,
+      departmentId: employees.departmentId,
+      positionId: employees.positionId,
+      department: departments.name, // Get name from joined table
+      position: positions.name, // Get name from joined table
       jobLevel: employees.jobLevel,
       status: employees.status,
       name: user.name,
       email: user.email,
+      image: user.image,
     })
     .from(employees)
-    .leftJoin(user, eq(employees.userId, user.id));
+    .leftJoin(user, eq(employees.userId, user.id))
+    .leftJoin(departments, eq(employees.departmentId, departments.id))
+    .leftJoin(positions, eq(employees.positionId, positions.id));
 
   // Fetch skills and scores for each employee
   const result = await Promise.all(
@@ -70,8 +75,8 @@ export async function POST(request: NextRequest) {
       .values({
         userId,
         employeeCode,
-        department,
-        position,
+        departmentId: body.departmentId,
+        positionId: body.positionId,
         jobLevel: Number(jobLevel),
         status: status || "active",
       })
