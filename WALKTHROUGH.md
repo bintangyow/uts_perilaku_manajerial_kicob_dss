@@ -93,14 +93,14 @@ final_score = Σ (raw_score × relative_weight) / total_weight
 
 This approach ensures the score is always valid on the 1–5 scale, even if only one assessor type has submitted.
 
-### 3.2 Bug Fix: Numeric Type Safety
+### 3.2 Bug Fix: Numeric Type Safety & Join Integrity
 **🇮🇩**
-- **Masalah**: Drizzle ORM mengembalikan tipe `numeric` dari PostgreSQL sebagai `string`, bukan `number`. Ini menyebabkan error `.toFixed is not a function` di berbagai bagian aplikasi.
-- **Solusi**: Membungkus semua nilai numerik dari database dengan `Number()` sebelum digunakan dalam kalkulasi atau ditampilkan di UI.
+- **Numeric Type**: Drizzle ORM mengembalikan tipe `numeric` sebagai `string`. Solusi: Menggunakan `Number()` pada kalkulasi.
+- **Join Integrity (Vercel Fix)**: Memperbaiki error `Property 'position' does not exist` pada API Export dengan melakukan explicit join ke tabel `positions` dan `departments` alih-alih memanggil kolom yang tidak ada di tabel `employees`.
 
 **🇬🇧**
-- **Problem**: Drizzle ORM returns `numeric` type from PostgreSQL as a `string`, not a `number`. This caused `.toFixed is not a function` errors throughout the application.
-- **Fix**: Wrapping all numeric values from the database with `Number()` before they are used in calculations or displayed in the UI.
+- **Numeric Type**: Drizzle ORM returns `numeric` as `string`. Fix: Wrapping database values with `Number()`.
+- **Join Integrity (Vercel Fix)**: Resolved the `Property 'position' does not exist` error in the Export API by implementing explicit joins to `positions` and `departments` tables instead of accessing non-existent columns on the `employees` table.
 
 ---
 
