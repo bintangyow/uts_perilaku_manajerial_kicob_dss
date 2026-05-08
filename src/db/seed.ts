@@ -132,26 +132,45 @@ async function seed() {
     }
   }
 
+  console.log("Generate Departments & Positions...");
+  const deptNames = ["IT Ops", "Human Resources", "Engineering", "Product", "Design", "Marketing"];
+  const depts = await db.insert(schema.departments).values(deptNames.map(name => ({ name }))).returning();
+  
+  const posNames = ["System Administrator", "HR Specialist", "Manager", "Software Engineer", "UI/UX Designer", "Marketing Specialist"];
+  const poss = await db.insert(schema.positions).values(posNames.map(name => ({ name, jobLevel: name === "Manager" ? 3 : 1 }))).returning();
+
   const employeeInserts = insertedUsers.map((u, i) => {
-    let dept = "Developer";
-    let position = "Staff";
-    if (u.role === "admin") { dept = "IT Ops"; position = "System Administrator"; }
-    else if (u.role === "hr") { dept = "Human Resources"; position = "HR Specialist"; }
-    else if (u.role === "manager") { dept = i % 2 === 0 ? "Engineering" : "Product"; position = "Manager"; }
+    let deptName = "Engineering";
+    let posName = "Software Engineer";
+    
+    if (u.role === "admin") { deptName = "IT Ops"; posName = "System Administrator"; }
+    else if (u.role === "hr") { deptName = "Human Resources"; posName = "HR Specialist"; }
+    else if (u.role === "manager") { deptName = i % 2 === 0 ? "Engineering" : "Product"; posName = "Manager"; }
     else {
-      dept = i % 3 === 0 ? "Engineering" : (i % 3 === 1 ? "Design" : "Marketing");
-      position = dept === "Engineering" ? "Software Engineer" : (dept === "Design" ? "UI/UX Designer" : "Marketing Specialist");
+      deptName = i % 3 === 0 ? "Engineering" : (i % 3 === 1 ? "Design" : "Marketing");
+      posName = deptName === "Engineering" ? "Software Engineer" : (deptName === "Design" ? "UI/UX Designer" : "Marketing Specialist");
     }
+
+    const deptId = depts.find(d => d.name === deptName)?.id;
+    const posId = poss.find(p => p.name === posName)?.id;
 
     return {
       userId: u.id,
       employeeCode: `EMP${String(i + 1).padStart(3, "0")}`,
-      department: dept,
-      position: position,
+      departmentId: deptId,
+      positionId: posId,
     };
   });
 
   const insertedEmployees = await db.insert(schema.employees).values(employeeInserts).returning();
+
+  console.log("Generate Periods...");
+  const [activePeriod] = await db.insert(schema.periods).values({
+    name: "Mei 2026",
+    status: "active",
+    startDate: new Date("2026-05-01"),
+    endDate: new Date("2026-05-31"),
+  }).returning();
 
   console.log("Generate Employee Skills & Assessments (dengan Trade-off)...");
   
@@ -214,7 +233,7 @@ async function seed() {
         teamwork: team.toFixed(1),
         adaptability: adapt.toFixed(1),
         consistencyScore: (Math.random() * 10 + 80).toFixed(1),
-        period: "Mei 2026",
+        periodId: activePeriod.id,
       });
 
       sumEmo += emo; sumComm += comm; sumTeam += team; sumAdapt += adapt;
