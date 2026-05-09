@@ -54,13 +54,21 @@ KiCob (KinerjaCollab) is a web-based **Decision Support System (DSS)** platform 
 - **Adaptabilitas** (Adaptability)
 
 Pembobotan penilaian:
-| Tipe Penilai | Bobot |
-|---|---|
-| Supervisor (Atasan) | **50%** |
-| Peer (Rekan Kerja) | **30%** |
-| Self (Diri Sendiri) | **20%** |
+| Tipe Penilai | Bobot | Peran |
+|---|---|---|
+| Supervisor (Atasan) | **50%** | Top-Down |
+| Upward (Bawahan) | **50%** | Bottom-Up |
+| Peer (Rekan Kerja) | **30%** | Horizontal |
+| Self (Diri Sendiri) | **20%** | Individual |
 
 > **Smart Normalization**: Jika salah satu tipe penilai belum mengisi, bobot akan didistribusikan secara proporsional sehingga total skor akhir tetap valid di skala 1–5.
+ 
+### 🔄 Mekanisme Relasi 360-Degree
+Sistem secara otomatis memetakan siapa yang harus dinilai oleh siapa berdasarkan struktur organisasi:
+- **Top-Down**: Supervisor memberikan penilaian kepada bawahan langsungnya.
+- **Peer-to-Peer**: Karyawan menilai rekan kerja di tingkat jabatan yang setara.
+- **Upward Feedback**: Bawahan memberikan penilaian kepada atasannya secara anonim/terstruktur untuk evaluasi kepemimpinan.
+- **Self-Evaluation**: Karyawan menilai kinerjanya sendiri sebagai pembanding.
 
 **🇬🇧** Collaborative assessment with dynamic weighting. Four behavioral indicators are rated on a scale of 1–5:
 - **Emotional Stability**
@@ -69,13 +77,21 @@ Pembobotan penilaian:
 - **Adaptability**
 
 Assessment weights:
-| Assessor Type | Weight |
-|---|---|
-| Supervisor | **50%** |
-| Peer | **30%** |
-| Self | **20%** |
+| Assessor Type | Weight | Role |
+|---|---|---|
+| Supervisor | **50%** | Top-Down |
+| Upward (Subordinate) | **50%** | Bottom-Up |
+| Peer | **30%** | Horizontal |
+| Self | **20%** | Individual |
 
 > **Smart Normalization**: If one assessor type has not submitted, weights are redistributed proportionally so the final score remains valid on the 1–5 scale.
+ 
+### 🔄 360-Degree Relation Mechanism
+The system automatically maps who should be assessed by whom based on the organizational structure:
+- **Top-Down**: Supervisors evaluate their direct subordinates.
+- **Peer-to-Peer**: Employees evaluate coworkers at the same job level.
+- **Upward Feedback**: Subordinates provide feedback to their supervisors in a structured manner for leadership evaluation.
+- **Self-Evaluation**: Employees evaluate their own performance for comparison.
 
 ---
 
