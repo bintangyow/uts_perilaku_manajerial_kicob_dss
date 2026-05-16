@@ -110,7 +110,12 @@ export async function POST(request: NextRequest) {
 
     // 4. Update Behavioral Scores (Weighted 360)
     const allAss = await db.select().from(assessments).where(eq(assessments.employeeId, empId));
-    const weightMap: Record<string, number> = { supervisor: 0.5, peer: 0.3, self: 0.2, upward: 0.1 };
+    const weightMap: Record<string, number> = { 
+      supervisor: 0.5, 
+      upward: 0.5, 
+      peer: 0.3, 
+      self: 0.2 
+    };
 
     const aggregate = () => {
       const keys = Array.from(new Set(allAss.flatMap(a => Object.keys(a.scores || {}))));

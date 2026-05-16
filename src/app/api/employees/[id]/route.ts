@@ -94,6 +94,7 @@ export async function GET(
     behavioralScore: scores[0] ?? null,
     assessments: empAssessments,
     totalProjects: empProjects.length,
+    totalAssessments: empAssessments.length,
   });
 }
 

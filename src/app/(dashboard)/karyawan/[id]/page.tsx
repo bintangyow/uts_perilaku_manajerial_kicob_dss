@@ -68,14 +68,22 @@ export default function KaryawanDetailPage({
 
   const empAssessments = employee.assessments || [];
 
-  // Skill radar data
-  const skillRadarData = (employee.skills || []).map((s: any) => ({
-    subject: s.skillName,
-    value: s.level,
-    fullMark: 5,
-  }));
+  // Unified Radar Data (Hard Skills + Behavioral Scores)
+  const skillRadarData = [
+    ...(employee.skills || []).map((s: any) => ({
+      subject: s.skillName,
+      value: s.level * 2, // Scale up to 10
+      fullMark: 10,
+    })),
+    ...(employee.behavioralScore ? [
+      { subject: "Emosional", value: Number(employee.behavioralScore.avgEmotionalStability), fullMark: 10 },
+      { subject: "Komunikasi", value: Number(employee.behavioralScore.avgCommunication), fullMark: 10 },
+      { subject: "Kerja Tim", value: Number(employee.behavioralScore.avgTeamwork), fullMark: 10 },
+      { subject: "Adaptabilitas", value: Number(employee.behavioralScore.avgAdaptability), fullMark: 10 },
+    ] : [])
+  ];
 
-  // Behavioral breakdown
+  // Behavioral breakdown for the cards
   const behaviorItems = employee.behavioralScore
     ? [
         {
@@ -183,13 +191,13 @@ export default function KaryawanDetailPage({
     if (employee.behavioralScore) {
       autoTable(doc, {
         startY: currentY + 5,
-        head: [["Kriteria Perilaku", "Skor (1-5)", "Keterangan"]],
+        head: [["Kriteria Perilaku", "Skor (1-10)", "Keterangan"]],
         body: [
-          ["Stabilitas Emosional", Number(employee.behavioralScore.avgEmotionalStability).toFixed(2), "Skor 1-10"],
-          ["Komunikasi", Number(employee.behavioralScore.avgCommunication).toFixed(2), "Skor 1-10"],
-          ["Kerja Tim", Number(employee.behavioralScore.avgTeamwork).toFixed(2), "Skor 1-10"],
-          ["Adaptabilitas", Number(employee.behavioralScore.avgAdaptability).toFixed(2), "Skor 1-10"],
-          ["SKOR AKHIR PERILAKU", Number(employee.behavioralScore.finalBehaviorScore).toFixed(2), "Skor 1-10"],
+          ["Stabilitas Emosional", Number(employee.behavioralScore.avgEmotionalStability).toFixed(2), "Skor Agregat"],
+          ["Komunikasi", Number(employee.behavioralScore.avgCommunication).toFixed(2), "Skor Agregat"],
+          ["Kerja Tim", Number(employee.behavioralScore.avgTeamwork).toFixed(2), "Skor Agregat"],
+          ["Adaptabilitas", Number(employee.behavioralScore.avgAdaptability).toFixed(2), "Skor Agregat"],
+          ["SKOR AKHIR PERILAKU", Number(employee.behavioralScore.finalBehaviorScore).toFixed(2), "Total Weighted"],
         ],
         theme: "grid",
         headStyles: { fillColor: [51, 65, 85] as [number, number, number] },
@@ -350,7 +358,7 @@ export default function KaryawanDetailPage({
               <p className="text-[10px] text-muted-foreground mb-4 italic">Visualisasi sebaran hard & soft skill</p>
               {skillRadarData.length > 2 ? (
                 <div className="h-[250px]">
-                  <SkillRadarChart data={skillRadarData} maxDomain={5} />
+                  <SkillRadarChart data={skillRadarData} maxDomain={10} />
                 </div>
               ) : (
                 <div className="h-[250px] flex items-center justify-center border border-dashed border-border/50 rounded-xl">
