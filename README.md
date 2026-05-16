@@ -252,7 +252,7 @@ npm run dev
 
 <div align="center">
 
-Dibuat dengan ❤️ untuk UTS Mata Kuliah Perilaku Manajerial.
-*Built with ❤️ for the Managerial Behavior Midterm Project.*
+Dibuat untuk UTS Mata Kuliah Perilaku Manajerial.
+*Built for the Managerial Behavior Midterm Project.*
 
 </div>
