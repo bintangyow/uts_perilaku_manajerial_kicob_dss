@@ -143,6 +143,19 @@ export default function KaryawanDetailPage({
     await mutateEmployee();
   };
 
+  const handleUpdateSkillLevel = async (skillId: number, newLevel: string) => {
+    const levelNum = Number(newLevel.replace("Level ", ""));
+    await fetch(`/api/employees/${id}/skills`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        skillId: skillId,
+        level: levelNum,
+      }),
+    });
+    await mutateEmployee();
+  };
+
   const handlePrintReport = () => {
     const doc = new jsPDF();
     const primaryColor: [number, number, number] = [14, 165, 233]; // Sky blue
@@ -610,9 +623,24 @@ export default function KaryawanDetailPage({
                   >
                     <div>
                       <p className="font-medium text-sm">{s.skillName}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Tingkat Penguasaan: L{s.level}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Level:</span>
+                        <Select
+                          defaultValue={`Level ${s.level}`}
+                          onValueChange={(val) => handleUpdateSkillLevel(s.skillId, val)}
+                        >
+                          <SelectTrigger className="h-6 w-24 bg-accent/10 border-border/20 text-[10px] font-bold rounded-md px-2">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="border-border/30">
+                            {[1, 2, 3, 4, 5].map((l) => (
+                              <SelectItem key={l} value={`Level ${l}`} className="text-[10px]">
+                                Level {l}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <Button
                       variant="ghost"
