@@ -32,6 +32,7 @@ import {
   FolderKanban,
   ClipboardCheck,
   Sparkles,
+  Swords,
   History,
   Settings,
   LogOut,
@@ -82,6 +83,12 @@ const navItems: NavItem[] = [
     href: "/rekomendasi",
     icon: <Sparkles className="w-4 h-4" />,
     roles: ["admin", "manager"],
+  },
+  {
+    title: "Perbandingan",
+    href: "/perbandingan",
+    icon: <Swords className="w-4 h-4" />,
+    roles: ["admin", "manager", "hr"],
   },
   {
     title: "Riwayat",

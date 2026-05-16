@@ -254,22 +254,27 @@ export default function PerbandinganPage() {
             </div>
 
             {/* Final Verdict */}
-            <div className="glass-card rounded-3xl p-10 bg-slate-900 border border-slate-800 text-center">
-              <Badge variant="outline" className="mb-4 border-slate-700 text-slate-500 uppercase tracking-widest text-[10px]">Kesimpulan Strategis</Badge>
-              <p className="text-xl font-bold text-slate-100 italic tracking-tight">
-                {(() => {
-                  const scoreA = Number(empAData.behavioralScore?.finalBehaviorScore || 0);
-                  const scoreB = Number(empBData.behavioralScore?.finalBehaviorScore || 0);
-                  const gap = Math.abs(scoreA - scoreB);
+            <div className="glass-card rounded-3xl p-10 bg-slate-900/50 border border-slate-800/50">
+              <div className="flex flex-col gap-4 max-w-3xl">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-4 bg-primary rounded-full" />
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Kesimpulan Strategis</span>
+                </div>
+                <p className="text-lg leading-relaxed text-slate-300">
+                  {(() => {
+                    const scoreA = Number(empAData.behavioralScore?.finalBehaviorScore || 0);
+                    const scoreB = Number(empBData.behavioralScore?.finalBehaviorScore || 0);
+                    const gap = Math.abs(scoreA - scoreB);
 
-                  if (scoreA > scoreB) {
-                    return `Secara keseluruhan, ${empAData.name} menunjukkan keunggulan perilaku (+${gap.toFixed(1)}) yang menjadikannya kandidat paling potensial untuk didorong maju.`;
-                  } else if (scoreB > scoreA) {
-                    return `Secara keseluruhan, ${empBData.name} menunjukkan keunggulan perilaku (+${gap.toFixed(1)}) yang menjadikannya kandidat paling potensial untuk didorong maju.`;
-                  }
-                  return `Keduanya memiliki kualitas yang setara. Keputusan akhir dapat diselaraskan dengan kebutuhan mendesak proyek saat ini.`;
-                })()}
-              </p>
+                    if (scoreA > scoreB) {
+                      return `Secara keseluruhan, ${empAData.name} menunjukkan profil perilaku yang lebih matang dalam mendukung efektivitas kerja tim. Selisih skor sebesar ${gap.toFixed(1)} mengindikasikan potensi yang lebih besar untuk akselerasi pengembangan kompetensi manajerial ke depannya.`;
+                    } else if (scoreB > scoreA) {
+                      return `Secara keseluruhan, ${empBData.name} menunjukkan profil perilaku yang lebih matang dalam mendukung efektivitas kerja tim. Selisih skor sebesar ${gap.toFixed(1)} mengindikasikan potensi yang lebih besar untuk akselerasi pengembangan kompetensi manajerial ke depannya.`;
+                    }
+                    return `Kedua kandidat memiliki kualitas perilaku yang sangat berimbang. Fokus pengembangan selanjutnya dapat diarahkan pada penguatan spesialisasi teknis masing-masing untuk menunjang performa proyek yang lebih optimal.`;
+                  })()}
+                </p>
+              </div>
             </div>
           </motion.div>
         ) : (
