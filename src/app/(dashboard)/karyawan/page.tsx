@@ -246,9 +246,9 @@ export default function KaryawanPage() {
                 </div>
                   <div className="space-y-2">
                     <Label>Level Jabatan</Label>
-                    <Select value={formJobLevel} onValueChange={(v) => v && setFormJobLevel(v)}>
+                    <Select value={formJobLevel} onValueChange={(v) => v && setFormJobLevel(v)} disabled={!!formPosId}>
                       <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-12 w-full text-left">
-                        <SelectValue />
+                        <SelectValue placeholder="Pilih Level" />
                       </SelectTrigger>
                       <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)] min-w-[240px]">
                         <SelectItem value="1" className="py-2.5">Level 1 — Karyawan (Staff)</SelectItem>
@@ -268,10 +268,17 @@ export default function KaryawanPage() {
                             {formSupervisorId ? employees?.find(e => String(e.id) === formSupervisorId)?.name : "Pilih Atasan"}
                           </SelectValue>
                         </SelectTrigger>
-                        <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)]">
-                          {employees?.filter(e => e.jobLevel > Number(formJobLevel)).map((e) => (
-                            <SelectItem key={e.id} value={String(e.id)}>{e.name} (Lvl {e.jobLevel})</SelectItem>
-                          ))}
+                        <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)] min-w-[280px]">
+                          {employees
+                            ?.filter(e => e.jobLevel > Number(formJobLevel))
+                            .map((e) => (
+                              <SelectItem key={e.id} value={String(e.id)} className="py-2.5">
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{e.name}</span>
+                                  <span className="text-[10px] text-muted-foreground">{e.positionName}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
                           {employees?.filter(e => e.jobLevel > Number(formJobLevel)).length === 0 && (
                             <div className="p-2 text-xs text-center text-muted-foreground">Belum ada karyawan dengan level lebih tinggi</div>
                           )}
