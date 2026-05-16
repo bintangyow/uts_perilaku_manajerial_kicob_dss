@@ -61,21 +61,21 @@ export default function PerbandinganPage() {
       </header>
 
       {/* Selectors */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Player 1 */}
-        <div className="glass-card rounded-3xl p-6 border-primary/20 bg-primary/5">
-          <label className="text-xs font-bold text-primary uppercase tracking-widest mb-4 block">Karyawan A (Biru)</label>
+        <div className="glass-card rounded-3xl p-6 border-slate-800 bg-slate-900/50">
+          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-4 block">Karyawan A</label>
           <Select onValueChange={(val) => setEmpAId(val || "")} value={empAId}>
-            <SelectTrigger className="h-14 bg-[#0f172a] border-slate-800 rounded-2xl text-lg">
+            <SelectTrigger className="h-14 bg-slate-950 border-slate-800 rounded-2xl text-lg hover:border-primary/50 transition-colors">
               <SelectValue>
                 {empAData ? (
-                  <div className="text-sm font-bold">{empAData.name}</div>
+                  <div className="text-sm font-bold text-slate-200">{empAData.name}</div>
                 ) : (
                   "Pilih Karyawan Pertama..."
                 )}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-[#0f172a] border-slate-800">
+            <SelectContent className="bg-slate-950 border-slate-800 text-slate-200">
               {employees?.map((emp) => (
                 <SelectItem key={emp.id} value={emp.id.toString()} disabled={emp.id.toString() === empBId}>
                   {emp.name}
@@ -86,19 +86,19 @@ export default function PerbandinganPage() {
         </div>
 
         {/* Player 2 */}
-        <div className="glass-card rounded-3xl p-6 border-amber-500/20 bg-amber-500/5">
-          <label className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-4 block">Karyawan B (Emas)</label>
+        <div className="glass-card rounded-3xl p-6 border-slate-800 bg-slate-900/50">
+          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-4 block">Karyawan B</label>
           <Select onValueChange={(val) => setEmpBId(val || "")} value={empBId}>
-            <SelectTrigger className="h-14 bg-[#0f172a] border-slate-800 rounded-2xl text-lg">
+            <SelectTrigger className="h-14 bg-slate-950 border-slate-800 rounded-2xl text-lg hover:border-amber-500/50 transition-colors">
               <SelectValue>
                 {empBData ? (
-                  <div className="text-sm font-bold">{empBData.name}</div>
+                  <div className="text-sm font-bold text-slate-200">{empBData.name}</div>
                 ) : (
                   "Pilih Karyawan Kedua..."
                 )}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-[#0f172a] border-slate-800">
+            <SelectContent className="bg-slate-950 border-slate-800 text-slate-200">
               {employees?.map((emp) => (
                 <SelectItem key={emp.id} value={emp.id.toString()} disabled={emp.id.toString() === empAId}>
                   {emp.name}
@@ -112,39 +112,40 @@ export default function PerbandinganPage() {
       <AnimatePresence mode="wait">
         {empAData && empBData ? (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
             className="grid grid-cols-1 lg:grid-cols-12 gap-8"
           >
             {/* Visual Radar */}
-            <div className="lg:col-span-7 glass-card rounded-3xl p-8 flex flex-col items-center">
-              <h3 className="font-semibold text-center mb-6">Radar Comparison (Skala 1-10)</h3>
+            <div className="lg:col-span-7 glass-card rounded-3xl p-8 flex flex-col items-center bg-slate-900/30">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 mb-8">Profil Kompetensi Radar</h3>
               <div className="w-full h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart cx="50%" cy="50%" outerRadius="80%" data={compareData}>
-                    <PolarGrid stroke="#334155" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                    <PolarGrid stroke="#1e293b" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }} />
                     <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
                     <Radar
                       name={empAData.name}
                       dataKey="A"
                       stroke="#0ea5e9"
+                      strokeWidth={3}
                       fill="#0ea5e9"
-                      fillOpacity={0.5}
+                      fillOpacity={0.2}
                     />
                     <Radar
                       name={empBData.name}
                       dataKey="B"
                       stroke="#f59e0b"
+                      strokeWidth={3}
                       fill="#f59e0b"
-                      fillOpacity={0.5}
+                      fillOpacity={0.2}
                     />
                     <Tooltip 
-                      contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px' }}
-                      itemStyle={{ fontSize: '12px' }}
+                      contentStyle={{ backgroundColor: '#020617', border: '1px solid #1e293b', borderRadius: '12px' }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
@@ -152,37 +153,34 @@ export default function PerbandinganPage() {
 
             {/* Stats Comparison */}
             <div className="lg:col-span-5 flex flex-col gap-6">
-              <div className="glass-card rounded-3xl p-6">
-                <h3 className="font-semibold mb-6 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-primary" /> Key Stats Comparison
+              <div className="glass-card rounded-3xl p-6 bg-slate-900/30">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 mb-8 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-primary" /> Statistik Head-to-Head
                 </h3>
-                <div className="space-y-6">
+                <div className="space-y-8">
                   {categories.map((cat) => {
                     const winner = getWinner(cat.key);
-                    const valA = Number(empAData.behavioralScore?.[cat.key] || 0).toFixed(1);
-                    const valB = Number(empBData.behavioralScore?.[cat.key] || 0).toFixed(1);
+                    const valA = Number(empAData.behavioralScore?.[cat.key] || 0);
+                    const valB = Number(empBData.behavioralScore?.[cat.key] || 0);
 
                     return (
-                      <div key={cat.key} className="space-y-2">
-                        <div className="flex justify-between text-xs font-medium text-muted-foreground uppercase">
+                      <div key={cat.key} className="space-y-3">
+                        <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase">
+                          <span className={winner === 'A' ? 'text-primary' : ''}>{valA.toFixed(1)}</span>
                           <span>{cat.label}</span>
-                          <span className="text-primary font-bold">
-                            {winner === 'A' ? empAData.name : winner === 'B' ? empBData.name : 'Seimbang'}
-                          </span>
+                          <span className={winner === 'B' ? 'text-amber-500' : ''}>{valB.toFixed(1)}</span>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-xl font-mono font-bold w-12 text-primary">{valA}</div>
-                          <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden flex">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden flex">
                             <div 
                               className="h-full bg-primary transition-all duration-1000" 
-                              style={{ width: `${(Number(valA) / (Number(valA) + Number(valB) || 1)) * 100}%` }}
+                              style={{ width: `${(valA / (valA + valB || 1)) * 100}%` }}
                             />
                             <div 
-                              className="h-full bg-amber-500 transition-all duration-1000 border-l border-slate-900" 
-                              style={{ width: `${(Number(valB) / (Number(valA) + Number(valB) || 1)) * 100}%` }}
+                              className="h-full bg-amber-500 transition-all duration-1000 border-l border-slate-950" 
+                              style={{ width: `${(valB / (valA + valB || 1)) * 100}%` }}
                             />
                           </div>
-                          <div className="text-xl font-mono font-bold w-12 text-right text-amber-500">{valB}</div>
                         </div>
                       </div>
                     );
@@ -191,14 +189,39 @@ export default function PerbandinganPage() {
               </div>
 
               {/* Verdict Card */}
-              <div className="bg-gradient-to-br from-primary/20 to-amber-500/20 border border-white/10 rounded-3xl p-6">
-                <h4 className="text-center font-bold text-white mb-2 uppercase tracking-tighter">Kesimpulan Manajerial</h4>
-                <p className="text-sm text-center text-slate-300">
-                  {Number(empAData.behavioralScore?.finalBehaviorScore) > Number(empBData.behavioralScore?.finalBehaviorScore) 
-                    ? `${empAData.name} memiliki profil perilaku yang lebih unggul secara keseluruhan dibandingkan ${empBData.name}.`
-                    : `${empBData.name} memiliki profil perilaku yang lebih unggul secara keseluruhan dibandingkan ${empAData.name}.`
-                  }
-                </p>
+              <div className="relative group overflow-hidden bg-slate-900 border border-slate-800 rounded-3xl p-8">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-amber-500/5 opacity-50" />
+                <div className="relative">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em] mb-4">Kesimpulan Manajerial</h4>
+                  <p className="text-slate-200 leading-relaxed font-medium">
+                    {(() => {
+                      let winsA = 0;
+                      let winsB = 0;
+                      let biggestGap = { label: "", val: 0, winner: "" };
+                      
+                      categories.forEach(cat => {
+                        const vA = Number(empAData.behavioralScore?.[cat.key] || 0);
+                        const vB = Number(empBData.behavioralScore?.[cat.key] || 0);
+                        const gap = Math.abs(vA - vB);
+                        if (vA > vB) {
+                          winsA++;
+                          if (gap > biggestGap.val) biggestGap = { label: cat.label, val: gap, winner: "A" };
+                        } else if (vB > vA) {
+                          winsB++;
+                          if (gap > biggestGap.val) biggestGap = { label: cat.label, val: gap, winner: "B" };
+                        }
+                      });
+
+                      if (winsA > winsB) {
+                        return `${empAData.name} menunjukkan performa lebih dominan dengan unggul di ${winsA} kategori. Keunggulan paling signifikan terlihat pada aspek ${biggestGap.label} (+${biggestGap.val.toFixed(1)}).`;
+                      } else if (winsB > winsA) {
+                        return `${empBData.name} menunjukkan performa lebih dominan dengan unggul di ${winsB} kategori. Keunggulan paling signifikan terlihat pada aspek ${biggestGap.label} (+${biggestGap.val.toFixed(1)}).`;
+                      } else {
+                        return `Hasil perbandingan menunjukkan skor yang sangat kompetitif dan seimbang antara ${empAData.name} dan ${empBData.name}.`;
+                      }
+                    })()}
+                  </p>
+                </div>
               </div>
             </div>
           </motion.div>
