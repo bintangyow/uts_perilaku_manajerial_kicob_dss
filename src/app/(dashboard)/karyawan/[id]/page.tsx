@@ -386,7 +386,9 @@ export default function KaryawanDetailPage({
             }
           />
           <DropdownMenuContent align="end" className="w-48 bg-[#0f172a] border-slate-800 text-slate-200">
-            <DropdownMenuLabel className="text-xs text-slate-500">Pilih Format</DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-xs text-slate-500">Pilih Format</DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator className="bg-slate-800" />
             <DropdownMenuItem onClick={handlePrintReport} className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
               <Printer className="w-4 h-4 mr-2 text-sky-400" /> PDF Document
