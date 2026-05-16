@@ -627,7 +627,7 @@ export default function KaryawanDetailPage({
                         <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Level:</span>
                         <Select
                           defaultValue={`Level ${s.level}`}
-                          onValueChange={(val) => handleUpdateSkillLevel(s.skillId, val)}
+                          onValueChange={(val) => val && handleUpdateSkillLevel(s.skillId, val)}
                         >
                           <SelectTrigger className="h-6 w-24 bg-accent/10 border-border/20 text-[10px] font-bold rounded-md px-2">
                             <SelectValue />
