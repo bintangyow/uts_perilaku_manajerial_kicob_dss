@@ -264,14 +264,30 @@ export default function PerbandinganPage() {
                   {(() => {
                     const scoreA = Number(empAData.behavioralScore?.finalBehaviorScore || 0);
                     const scoreB = Number(empBData.behavioralScore?.finalBehaviorScore || 0);
-                    const gap = Math.abs(scoreA - scoreB);
+                    
+                    let winsA = [];
+                    let winsB = [];
+                    let biggestGap = { label: "", val: 0 };
+
+                    categories.forEach(cat => {
+                      const vA = Number(empAData.behavioralScore?.[cat.key] || 0);
+                      const vB = Number(empBData.behavioralScore?.[cat.key] || 0);
+                      const gap = Math.abs(vA - vB);
+                      
+                      if (vA > vB) winsA.push(cat.label);
+                      else if (vB > vA) winsB.push(cat.label);
+                      
+                      if (gap > biggestGap.val) {
+                        biggestGap = { label: cat.label, val: gap };
+                      }
+                    });
 
                     if (scoreA > scoreB) {
-                      return `Secara keseluruhan, ${empAData.name} menunjukkan profil perilaku yang lebih matang dalam mendukung efektivitas kerja tim. Selisih skor sebesar ${gap.toFixed(1)} mengindikasikan potensi yang lebih besar untuk akselerasi pengembangan kompetensi manajerial ke depannya.`;
+                      return `${empAData.name} menunjukkan profil yang lebih unggul secara keseluruhan, terutama pada aspek ${winsA.join(", ")}. Perbedaan paling mencolok terlihat pada variabel ${biggestGap.label} dengan selisih skor ${biggestGap.val.toFixed(1)}. Hal ini menjadikannya pilihan yang lebih kuat untuk peran yang menuntut kompetensi tersebut.`;
                     } else if (scoreB > scoreA) {
-                      return `Secara keseluruhan, ${empBData.name} menunjukkan profil perilaku yang lebih matang dalam mendukung efektivitas kerja tim. Selisih skor sebesar ${gap.toFixed(1)} mengindikasikan potensi yang lebih besar untuk akselerasi pengembangan kompetensi manajerial ke depannya.`;
+                      return `${empBData.name} menunjukkan profil yang lebih unggul secara keseluruhan, terutama pada aspek ${winsB.join(", ")}. Perbedaan paling mencolok terlihat pada variabel ${biggestGap.label} dengan selisih skor ${biggestGap.val.toFixed(1)}. Hal ini menjadikannya pilihan yang lebih kuat untuk peran yang menuntut kompetensi tersebut.`;
                     }
-                    return `Kedua kandidat memiliki kualitas perilaku yang sangat berimbang. Fokus pengembangan selanjutnya dapat diarahkan pada penguatan spesialisasi teknis masing-masing untuk menunjang performa proyek yang lebih optimal.`;
+                    return `Kedua kandidat memiliki kualitas perilaku yang sangat berimbang di hampir semua variabel. Pengambilan keputusan dapat difokuskan pada kecocokan spesifik terhadap kebutuhan teknis proyek.`;
                   })()}
                 </p>
               </div>
