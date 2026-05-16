@@ -265,8 +265,8 @@ export default function PerbandinganPage() {
                     const scoreA = Number(empAData.behavioralScore?.finalBehaviorScore || 0);
                     const scoreB = Number(empBData.behavioralScore?.finalBehaviorScore || 0);
                     
-                    let winsA = [];
-                    let winsB = [];
+                    let winsA: string[] = [];
+                    let winsB: string[] = [];
                     let biggestGap = { label: "", val: 0 };
 
                     categories.forEach(cat => {
