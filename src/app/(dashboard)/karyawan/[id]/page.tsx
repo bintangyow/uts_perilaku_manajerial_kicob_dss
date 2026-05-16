@@ -33,6 +33,7 @@ import { ScoreBreakdown } from "@/components/score-breakdown";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
