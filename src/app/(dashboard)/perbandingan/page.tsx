@@ -55,7 +55,7 @@ export default function PerbandinganPage() {
     <div className="space-y-8 pb-12">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-          <Swords className="w-8 h-8 text-primary" /> Head-to-Head Comparison
+          Head-to-Head Comparison
         </h1>
         <p className="text-muted-foreground">Bandingkan profil kompetensi antar karyawan secara mendalam.</p>
       </header>
@@ -155,7 +155,7 @@ export default function PerbandinganPage() {
             <div className="lg:col-span-5 flex flex-col gap-6">
               <div className="glass-card rounded-3xl p-6 bg-slate-900/30">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 mb-8 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-primary" /> Statistik Head-to-Head
+                  Statistik Head-to-Head
                 </h3>
                 <div className="space-y-8">
                   {categories.map((cat) => {
