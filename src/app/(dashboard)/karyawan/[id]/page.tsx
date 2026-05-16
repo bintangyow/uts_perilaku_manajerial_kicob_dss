@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Mail, Building2, Briefcase, Hash, Plus, Trash2, Printer, Search, Sparkles, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, Mail, Building2, Briefcase, Hash, Plus, Trash2, Printer, Search, Sparkles, ClipboardCheck, FileText, Sheet, Download, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import useSWR from "swr";
 import { jsPDF } from "jspdf";
@@ -30,6 +30,14 @@ import {
 } from "@/components/ui/select";
 import { SkillRadarChart } from "@/components/skill-radar-chart";
 import { ScoreBreakdown } from "@/components/score-breakdown";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -267,6 +275,80 @@ export default function KaryawanDetailPage({
     window.open(url, '_blank');
   };
 
+  const handleExportExcel = () => {
+    const headers = ["Field", "Detail"];
+    const rows = [
+      ["Nama", employee.name],
+      ["NIK/Kode", employee.employeeCode],
+      ["Posisi", employee.position],
+      ["Departemen", employee.department],
+      ["Email", employee.email],
+      ["", ""],
+      ["KRITERIA PERILAKU", "SKOR (1-10)"],
+      ["Stabilitas Emosional", Number(employee.behavioralScore?.avgEmotionalStability || 0).toFixed(2)],
+      ["Komunikasi", Number(employee.behavioralScore?.avgCommunication || 0).toFixed(2)],
+      ["Kerja Tim", Number(employee.behavioralScore?.avgTeamwork || 0).toFixed(2)],
+      ["Adaptabilitas", Number(employee.behavioralScore?.avgAdaptability || 0).toFixed(2)],
+      ["SKOR AKHIR PERILAKU", Number(employee.behavioralScore?.finalBehaviorScore || 0).toFixed(2)],
+    ];
+
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + headers.join(",") + "\n"
+      + rows.map(e => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Raport_${employee.name.replace(/ /g, "_")}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportWord = () => {
+    const content = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head><meta charset='utf-8'><title>Raport Kompetensi</title></head>
+      <body style="font-family: Arial, sans-serif;">
+        <h1 style="text-align: center; color: #0ea5e9;">RAPORT KOMPETENSI KARYAWAN</h1>
+        <hr>
+        <h3 style="color: #334155;">Informasi Karyawan</h3>
+        <table border="1" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <tr style="background-color: #f8fafc;"><td><b>Nama Lengkap</b></td><td>${employee.name}</td></tr>
+          <tr><td><b>NIK / Kode</b></td><td>${employee.employeeCode}</td></tr>
+          <tr style="background-color: #f8fafc;"><td><b>Posisi</b></td><td>${employee.position}</td></tr>
+          <tr><td><b>Departemen</b></td><td>${employee.department}</td></tr>
+          <tr style="background-color: #f8fafc;"><td><b>Email</b></td><td>${employee.email}</td></tr>
+        </table>
+        
+        <h3 style="color: #334155;">Hasil Assessment Perilaku (Skala 1-10)</h3>
+        <table border="1" style="width: 100%; border-collapse: collapse;">
+          <tr style="background-color: #1e293b; color: white;">
+            <th style="padding: 8px;">Kriteria Perilaku</th>
+            <th style="padding: 8px;">Skor Agregat</th>
+          </tr>
+          <tr><td style="padding: 8px;">Stabilitas Emosional</td><td style="padding: 8px; text-align: center;">${Number(employee.behavioralScore?.avgEmotionalStability || 0).toFixed(2)}</td></tr>
+          <tr style="background-color: #f8fafc;"><td style="padding: 8px;">Komunikasi</td><td style="padding: 8px; text-align: center;">${Number(employee.behavioralScore?.avgCommunication || 0).toFixed(2)}</td></tr>
+          <tr><td style="padding: 8px;">Kerja Tim</td><td style="padding: 8px; text-align: center;">${Number(employee.behavioralScore?.avgTeamwork || 0).toFixed(2)}</td></tr>
+          <tr style="background-color: #f8fafc;"><td style="padding: 8px;">Adaptabilitas</td><td style="padding: 8px; text-align: center;">${Number(employee.behavioralScore?.avgAdaptability || 0).toFixed(2)}</td></tr>
+          <tr style="background-color: #e2e8f0;"><td style="padding: 8px;"><b>SKOR AKHIR PERILAKU</b></td><td style="padding: 8px; text-align: center;"><b>${Number(employee.behavioralScore?.finalBehaviorScore || 0).toFixed(2)}</b></td></tr>
+        </table>
+        <br>
+        <p style="font-size: 10px; color: #64748b; text-align: right;">Dicetak secara sistem pada: ${new Date().toLocaleString("id-ID")}</p>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob(['\ufeff', content], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Raport_${employee.name.replace(/ /g, "_")}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
       {/* Back button & header */}
@@ -290,14 +372,31 @@ export default function KaryawanDetailPage({
             Profil dan kompetensi {employee.name}
           </p>
         </div>
-        <Button
-          onClick={handlePrintReport}
-          variant="outline"
-          className="rounded-xl border-primary/30 text-primary hover:bg-primary/10 hidden sm:flex"
-        >
-          <Printer className="w-4 h-4 mr-2" />
-          Cetak Raport
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="rounded-xl border-primary/30 text-primary hover:bg-primary/10 hidden sm:flex"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export Raport
+              <ChevronDown className="w-3 h-3 ml-2 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 bg-[#0f172a] border-slate-800 text-slate-200">
+            <DropdownMenuLabel className="text-xs text-slate-500">Pilih Format</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-slate-800" />
+            <DropdownMenuItem onClick={handlePrintReport} className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+              <Printer className="w-4 h-4 mr-2 text-sky-400" /> PDF Document
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportWord} className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+              <FileText className="w-4 h-4 mr-2 text-blue-400" /> Word Document
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportExcel} className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800">
+              <Sheet className="w-4 h-4 mr-2 text-emerald-400" /> Excel / CSV
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
