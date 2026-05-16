@@ -373,16 +373,18 @@ export default function KaryawanDetailPage({
           </p>
         </div>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="rounded-xl border-primary/30 text-primary hover:bg-primary/10 hidden sm:flex"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export Raport
-              <ChevronDown className="w-3 h-3 ml-2 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="outline"
+                className="rounded-xl border-primary/30 text-primary hover:bg-primary/10 hidden sm:flex"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export Raport
+                <ChevronDown className="w-3 h-3 ml-2 opacity-50" />
+              </Button>
+            }
+          />
           <DropdownMenuContent align="end" className="w-48 bg-[#0f172a] border-slate-800 text-slate-200">
             <DropdownMenuLabel className="text-xs text-slate-500">Pilih Format</DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-slate-800" />
@@ -519,7 +521,7 @@ export default function KaryawanDetailPage({
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="font-semibold text-lg flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" /> Raport Perilaku Detail
+                    Raport Perilaku Detail
                   </h3>
                   <p className="text-xs text-muted-foreground">Analisis mendalam dari 16 indikator perilaku (Skala 1-10)</p>
                 </div>
