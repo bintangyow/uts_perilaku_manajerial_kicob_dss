@@ -144,10 +144,9 @@ export function AppSidebar() {
                       isActive={isActive}
                       className={`
                         relative rounded-xl h-10 transition-all duration-200
-                        ${
-                          isActive
-                            ? "bg-primary/15 text-primary border border-primary/20 shadow-[0_0_12px_oklch(0.5_0.2_260/20%)]"
-                            : "hover:bg-accent/10 text-muted-foreground hover:text-foreground"
+                        ${isActive
+                          ? "bg-primary/15 text-primary border border-primary/20 shadow-[0_0_12px_oklch(0.5_0.2_260/20%)]"
+                          : "hover:bg-accent/10 text-muted-foreground hover:text-foreground"
                         }
                       `}
                     >
@@ -179,24 +178,24 @@ export function AppSidebar() {
                 <button className="flex items-center gap-3 w-full p-2 rounded-xl hover:bg-accent/10 transition-colors" />
               }
             >
-                <Avatar className="w-9 h-9 border border-primary/30">
-                  <AvatarImage src={currentUser.image || ""} />
-                  <AvatarFallback className="bg-primary/20 text-primary text-sm font-semibold">
-                    {currentUser.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 text-left min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {currentUser.name}
-                  </p>
-                  <Badge
-                    variant="secondary"
-                    className="text-[10px] h-4 px-1.5 bg-primary/10 text-primary border-primary/20"
-                  >
-                    {currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)}
-                  </Badge>
-                </div>
-                <ChevronUp className="w-4 h-4 text-muted-foreground" />
+              <Avatar className="w-9 h-9 border border-primary/30">
+                <AvatarImage src={currentUser.image || ""} />
+                <AvatarFallback className="bg-primary/20 text-primary text-sm font-semibold">
+                  {currentUser.name.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {currentUser.name}
+                </p>
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] h-4 px-1.5 bg-primary/10 text-primary border-primary/20"
+                >
+                  {currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)}
+                </Badge>
+              </div>
+              <ChevronUp className="w-4 h-4 text-muted-foreground" />
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="start"
