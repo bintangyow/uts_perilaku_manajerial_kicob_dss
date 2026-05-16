@@ -13,6 +13,7 @@ import {
   varchar,
   unique,
   index,
+  jsonb,
   AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
@@ -145,10 +146,16 @@ export const assessments = pgTable("assessments", {
     .notNull()
     .references(() => employees.id, { onDelete: "cascade" }),
   assessmentType: text("assessment_type").notNull(), // self | peer | supervisor
-  emotionalStability: numeric("emotional_stability", { precision: 5, scale: 2 }).notNull(),
-  communication: numeric("communication", { precision: 5, scale: 2 }).notNull(),
-  teamwork: numeric("teamwork", { precision: 5, scale: 2 }).notNull(),
-  adaptability: numeric("adaptability", { precision: 5, scale: 2 }).notNull(),
+  
+  // Materialized theme averages
+  emotionalStability: numeric("emotional_stability", { precision: 5, scale: 2 }).notNull().default("0"),
+  communication: numeric("communication", { precision: 5, scale: 2 }).notNull().default("0"),
+  teamwork: numeric("teamwork", { precision: 5, scale: 2 }).notNull().default("0"),
+  adaptability: numeric("adaptability", { precision: 5, scale: 2 }).notNull().default("0"),
+
+  // Detailed scores stored as dynamic JSONB
+  scores: jsonb("scores").$type<Record<string, number>>(),
+
   consistencyScore: numeric("consistency_score", { precision: 5, scale: 2 })
     .notNull()
     .default("0"),
@@ -164,12 +171,19 @@ export const behavioralScores = pgTable("behavioral_scores", {
   id: serial("id").primaryKey(),
   employeeId: integer("employee_id")
     .notNull()
+    .unique()
     .references(() => employees.id, { onDelete: "cascade" }),
-  avgEmotionalStability: numeric("avg_emotional_stability", { precision: 5, scale: 2 }).notNull(),
-  avgCommunication: numeric("avg_communication", { precision: 5, scale: 2 }).notNull(),
-  avgTeamwork: numeric("avg_teamwork", { precision: 5, scale: 2 }).notNull(),
-  avgAdaptability: numeric("avg_adaptability", { precision: 5, scale: 2 }).notNull(),
-  finalBehaviorScore: numeric("final_behavior_score", { precision: 5, scale: 2 }).notNull(),
+
+  // Materialized global averages
+  avgEmotionalStability: numeric("avg_emotional_stability", { precision: 5, scale: 2 }).notNull().default("0"),
+  avgCommunication: numeric("avg_communication", { precision: 5, scale: 2 }).notNull().default("0"),
+  avgTeamwork: numeric("avg_teamwork", { precision: 5, scale: 2 }).notNull().default("0"),
+  avgAdaptability: numeric("avg_adaptability", { precision: 5, scale: 2 }).notNull().default("0"),
+
+  // Detailed Averages stored as dynamic JSONB
+  averages: jsonb("averages").$type<Record<string, number>>(),
+
+  finalBehaviorScore: numeric("final_behavior_score", { precision: 5, scale: 2 }).notNull().default("0"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [
   index("behavioral_scores_employee_id_idx").on(t.employeeId),

@@ -104,12 +104,12 @@ export default function DashboardPage() {
     {
       subject: "Emosional",
       value: getAvg("avgEmotionalStability"),
-      fullMark: 5,
+      fullMark: 10,
     },
-    { subject: "Komunikasi", value: getAvg("avgCommunication"), fullMark: 5 },
-    { subject: "Kerja Tim", value: getAvg("avgTeamwork"), fullMark: 5 },
-    { subject: "Adaptasi", value: getAvg("avgAdaptability"), fullMark: 5 },
-    { subject: "Final Score", value: avgOrgScore, fullMark: 5 },
+    { subject: "Komunikasi", value: getAvg("avgCommunication"), fullMark: 10 },
+    { subject: "Kerja Tim", value: getAvg("avgTeamwork"), fullMark: 10 },
+    { subject: "Adaptasi", value: getAvg("avgAdaptability"), fullMark: 10 },
+    { subject: "Final Score", value: avgOrgScore, fullMark: 10 },
   ];
 
   return (
@@ -180,7 +180,7 @@ export default function DashboardPage() {
                   axisLine={{ stroke: "oklch(0.3 0.04 260 / 20%)" }}
                 />
                 <YAxis
-                  domain={[0, 5]}
+                  domain={[0, 10]}
                   tick={{ fill: "oklch(0.5 0.02 260)", fontSize: 10 }}
                   axisLine={{ stroke: "oklch(0.3 0.04 260 / 20%)" }}
                 />

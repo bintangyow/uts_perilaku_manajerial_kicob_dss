@@ -24,6 +24,7 @@ export async function GET(
       department: departments.name, // Get name from joined table
       position: positions.name, // Get name from joined table
       jobLevel: employees.jobLevel,
+      supervisorId: employees.supervisorId,
       status: employees.status,
       name: user.name,
       email: user.email,

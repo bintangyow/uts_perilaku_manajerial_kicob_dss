@@ -23,6 +23,7 @@ interface SkillRadarChartProps {
   primaryLabel?: string;
   secondaryLabel?: string;
   height?: number;
+  maxDomain?: number;
 }
 
 export function SkillRadarChart({
@@ -31,6 +32,7 @@ export function SkillRadarChart({
   primaryLabel = "Skor",
   secondaryLabel = "Rata-rata",
   height = 300,
+  maxDomain = 10,
 }: SkillRadarChartProps) {
   // Merge primary and secondary data
   const mergedData = data.map((d, i) => ({
@@ -59,9 +61,10 @@ export function SkillRadarChart({
         />
         <PolarRadiusAxis
           angle={30}
-          domain={[0, 5]}
+          domain={[0, maxDomain]}
           tick={{ fill: "oklch(0.5 0.02 260)", fontSize: 9 }}
           tickCount={6}
+          axisLine={false}
         />
         <Tooltip
           formatter={(value: any) => (typeof value === "number" ? value.toFixed(2) : value)}

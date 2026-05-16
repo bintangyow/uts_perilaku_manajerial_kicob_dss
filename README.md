@@ -19,11 +19,11 @@
 
 **🇮🇩 Bahasa Indonesia**
 
-KiCob (KinerjaCollab) adalah platform **Decision Support System (DSS)** berbasis web yang dirancang khusus untuk membantu organisasi dalam menganalisis dan mengambil keputusan terkait manajemen kinerja karyawan. Platform ini mengimplementasikan metode **360-Degree Feedback** yang menggabungkan penilaian dari atasan, rekan kerja, dan diri sendiri, lalu menggunakan hasilnya untuk merekomendasikan komposisi tim proyek yang optimal secara algoritmis.
+KiCob (KinerjaCollab) adalah platform **Decision Support System (DSS)** berbasis web yang dirancang khusus untuk membantu organisasi dalam menganalisis dan mengambil keputusan terkait manajemen kinerja karyawan. Platform ini mengimplementasikan metode **360-Degree Feedback** yang menggabungkan penilaian dari atasan langsung, rekan kerja, dan diri sendiri, lalu menggunakan hasilnya untuk merekomendasikan komposisi tim proyek yang optimal secara algoritmis.
 
 **🇬🇧 English**
 
-KiCob (KinerjaCollab) is a web-based **Decision Support System (DSS)** platform specifically designed to assist organizations in analyzing and making informed decisions related to employee performance management. The platform implements a **360-Degree Feedback** methodology that combines assessments from supervisors, peers, and self-evaluation, then uses the results to algorithmically recommend optimal project team compositions.
+KiCob (KinerjaCollab) is a web-based **Decision Support System (DSS)** platform specifically designed to assist organizations in analyzing and making informed decisions related to employee performance management. The platform implements a **360-Degree Feedback** methodology that combines assessments from direct supervisors, peers, and self-evaluation, then uses the results to algorithmically recommend optimal project team compositions.
 
 ---
 
@@ -32,22 +32,22 @@ KiCob (KinerjaCollab) is a web-based **Decision Support System (DSS)** platform 
 ### 🔐 1. Hierarchical RBAC (Role-Based Access Control)
 
 **🇮🇩** Sistem hak akses yang terintegrasi penuh dengan hirarki jabatan organisasi.
-- **Admin**: Akses penuh ke seluruh sistem, termasuk manajemen pengguna.
+- **Admin**: Akses penuh ke seluruh sistem, termasuk manajemen user dan master data.
 - **HR**: Mengelola data karyawan, departemen, jabatan, dan periode penilaian.
-- **Manager**: Melihat analitik tim, menyetujui rekomendasi proyek.
-- **Reviewer**: Mengisi form penilaian untuk karyawan yang relevan.
+- **Manager**: Melihat analitik tim, membuat proyek, dan menjalankan engine rekomendasi.
+- **Reviewer**: Mengisi form penilaian 360 untuk diri sendiri, rekan, atau atasan/bawahan.
 
 **🇬🇧** A fully integrated access control system tied to the organizational job hierarchy.
-- **Admin**: Full system access, including user management.
+- **Admin**: Full system access, including user management and master data.
 - **HR**: Manages employee data, departments, positions, and assessment periods.
-- **Manager**: Views team analytics and approves project recommendations.
-- **Reviewer**: Fills out assessment forms for relevant employees.
+- **Manager**: Views team analytics, creates projects, and runs the recommendation engine.
+- **Reviewer**: Fills out 360 assessment forms for self, peers, or supervisors/subordinates.
 
 ---
 
-### 📊 2. 360-Degree Behavioral Assessment
+### 📊 2. Advanced 360-Degree Behavioral Assessment
 
-**🇮🇩** Penilaian kolaboratif dengan pembobotan dinamis. Terdapat 4 indikator perilaku yang dinilai pada skala 1–5:
+**🇮🇩** Penilaian kolaboratif dengan pembobotan dinamis pada skala **1–10**:
 - **Stabilitas Emosi** (Emotional Stability)
 - **Komunikasi** (Communication)
 - **Kerja Sama Tim** (Teamwork)
@@ -61,71 +61,49 @@ Pembobotan penilaian:
 | Peer (Rekan Kerja) | **30%** | Horizontal |
 | Self (Diri Sendiri) | **20%** | Individual |
 
-> **Smart Normalization**: Jika salah satu tipe penilai belum mengisi, bobot akan didistribusikan secara proporsional sehingga total skor akhir tetap valid di skala 1–5.
+> **Smart Normalization**: Jika salah satu tipe penilai belum mengisi, bobot akan didistribusikan secara proporsional sehingga total skor akhir tetap valid di skala **1–10**.
  
 ### 🔄 Mekanisme Relasi 360-Degree
-Sistem secara otomatis memetakan siapa yang harus dinilai oleh siapa berdasarkan struktur organisasi:
+Sistem secara otomatis memetakan siapa yang harus dinilai berdasarkan struktur hirarki (`supervisorId`):
 - **Top-Down**: Supervisor memberikan penilaian kepada bawahan langsungnya.
 - **Peer-to-Peer**: Karyawan menilai rekan kerja di tingkat jabatan yang setara.
-- **Upward Feedback**: Bawahan memberikan penilaian kepada atasannya secara anonim/terstruktur untuk evaluasi kepemimpinan.
+- **Upward Feedback**: Bawahan memberikan penilaian kepada atasannya secara terstruktur.
 - **Self-Evaluation**: Karyawan menilai kinerjanya sendiri sebagai pembanding.
 
-**🇬🇧** Collaborative assessment with dynamic weighting. Four behavioral indicators are rated on a scale of 1–5:
-- **Emotional Stability**
-- **Communication**
-- **Teamwork**
-- **Adaptability**
+**🇬🇧** Collaborative assessment with dynamic weighting on a **1–10 scale**:
+- **Emotional Stability**, **Communication**, **Teamwork**, and **Adaptability**.
 
-Assessment weights:
-| Assessor Type | Weight | Role |
-|---|---|---|
-| Supervisor | **50%** | Top-Down |
-| Upward (Subordinate) | **50%** | Bottom-Up |
-| Peer | **30%** | Horizontal |
-| Self | **20%** | Individual |
-
-> **Smart Normalization**: If one assessor type has not submitted, weights are redistributed proportionally so the final score remains valid on the 1–5 scale.
- 
-### 🔄 360-Degree Relation Mechanism
-The system automatically maps who should be assessed by whom based on the organizational structure:
-- **Top-Down**: Supervisors evaluate their direct subordinates.
-- **Peer-to-Peer**: Employees evaluate coworkers at the same job level.
-- **Upward Feedback**: Subordinates provide feedback to their supervisors in a structured manner for leadership evaluation.
-- **Self-Evaluation**: Employees evaluate their own performance for comparison.
+> **Smart Normalization**: Weights are redistributed proportionally if an assessor type is missing, ensuring the final score remains valid on the **1–10 scale**.
 
 ---
 
 ### 🤖 3. DSS Recommendation Engine
 
 **🇮🇩** Algoritma cerdas untuk merekomendasikan komposisi tim proyek terbaik.
-- Setiap proyek mendefinisikan kebutuhan **Hard Skill** (level minimum skill yang dibutuhkan).
+- Setiap proyek mendefinisikan kebutuhan **Hard Skill** (Skala 1-5).
 - Algoritma menghitung **Total Score** tiap karyawan berdasarkan:
-  - `Hard Skill Score` (default bobot: 60%) – berdasarkan gap antara skill yang dimiliki vs. yang dibutuhkan.
-  - `Soft Factor Score` (default bobot: 40%) – berdasarkan rata-rata skor 360-Degree.
-- Output: **Ranking kandidat** dengan skor tertinggi yang paling cocok untuk proyek tersebut.
+  - `Hard Skill Score` (60%) – berdasarkan gap antara skill yang dimiliki vs. yang dibutuhkan.
+  - `Soft Factor Score` (40%) – berdasarkan rata-rata skor agregat 360-Degree (Skala 1-10).
+- Output: **Ranking kandidat** terpilih yang paling cocok untuk tim proyek tersebut.
 
 **🇬🇧** A smart algorithm to recommend the best project team composition.
-- Each project defines **Hard Skill** requirements (minimum required skill level).
-- The algorithm calculates a **Total Score** for each employee based on:
-  - `Hard Skill Score` (default weight: 60%) – based on the gap between owned skills vs. required.
-  - `Soft Factor Score` (default weight: 40%) – based on the averaged 360-Degree score.
-- Output: **Ranked candidates** with the highest scores most suitable for the project.
+- Projects define **Hard Skill** requirements (Scale 1-5).
+- Algorithm calculates a **Total Score** based on Technical Gap (60%) and 360-Degree Behavioral Score (40%).
 
 ---
 
-### 📈 4. Analytics & Reporting
+### 📈 4. Visual Analytics & Reporting
 
 **🇮🇩**
-- **Skill Radar Chart**: Visualisasi interaktif radar untuk membandingkan kompetensi antar karyawan.
-- **Dashboard Analitik**: KPI card, tren performa, dan ringkasan kondisi organisasi.
-- **Ekspor PDF**: Cetak laporan performa individu maupun tim dalam format dokumen profesional.
-- **Audit Trail**: Riwayat lengkap setiap persetujuan dan penolakan rekomendasi tim.
+- **Skill Radar Chart**: Visualisasi interaktif dengan skala dinamis (Skala 5 untuk Hard Skill, Skala 10 untuk Perilaku).
+- **Dashboard Analitik**: KPI card, tren performa organisasi, dan ringkasan status.
+- **Ekspor PDF (Raport)**: Cetak laporan performa individu "Raport Kompetensi" dalam format profesional.
+- **Audit Trail**: Riwayat lengkap setiap aktivitas persetujuan dan perubahan data.
 
 **🇬🇧**
-- **Skill Radar Chart**: Interactive radar visualization for comparing employee competencies.
-- **Analytics Dashboard**: KPI cards, performance trends, and organizational health summary.
-- **PDF Export**: Print individual or team performance reports in a professional document format.
-- **Audit Trail**: Complete history of every approval and rejection of team recommendations.
+- **Skill Radar Chart**: Interactive radar visualization with adaptive scaling.
+- **Analytics Dashboard**: Real-time KPI cards and performance trends.
+- **PDF Export**: Print professional "Competency Reports" for individuals.
 
 ---
  
@@ -133,29 +111,21 @@ The system automatically maps who should be assessed by whom based on the organi
  
 **🇮🇩** Integrasi sistem unggah foto profil yang sinkron ke seluruh platform.
 - **Vercel Blob Storage**: Penyimpanan foto profil yang aman dan cepat di cloud.
-- **Unified Avatar**: Foto profil muncul secara konsisten di Dashboard, Daftar Karyawan, Proyek, Rekomendasi, hingga Form Assessment.
-- **Smart Fallback**: Otomatis menampilkan inisial nama jika foto profil belum diunggah.
+- **Unified Avatar**: Foto profil muncul secara konsisten di seluruh modul aplikasi.
+- **Smart Fallback**: Otomatis menampilkan inisial nama jika foto profil belum tersedia.
  
 **🇬🇧** Integrated profile picture upload system synchronized across the platform.
-- **Vercel Blob Storage**: Secure and fast cloud storage for profile photos.
-- **Unified Avatar**: Profile pictures appear consistently in the Dashboard, Employee List, Projects, Recommendations, and Assessment Forms.
-- **Smart Fallback**: Automatically displays name initials if a profile picture has not been uploaded.
- 
+
 ---
  
 ### 🚀 Future Roadmap & Development
  
-**🇮🇩** Proyek ini dikembangkan sebagai tugas **UTS Mata Kuliah Perilaku Manajerial**. Rencana pengembangan selanjutnya meliputi:
-- **Advanced Audit Trail**: Pencatatan histori perubahan skor perilaku secara mendalam untuk keperluan audit HR.
-- **Real-time Notifications**: Notifikasi instan via email/sistem saat periode penilaian dimulai atau form disubmit.
-- **Machine Learning Integration**: Optimasi rekomendasi tim menggunakan algoritma pembelajaran mesin untuk prediksi performa tim di masa depan.
-- **Mobile Application**: Pengembangan versi mobile untuk memudahkan pengisian assessment di mana saja.
+**🇮🇩** Proyek ini dikembangkan sebagai tugas **UTS Mata Kuliah Perilaku Manajerial**. Rencana selanjutnya:
+- **Advanced Audit Trail**: Pencatatan histori perubahan skor secara mendalam.
+- **Real-time Notifications**: Notifikasi instan saat periode penilaian dimulai.
+- **Machine Learning Integration**: Optimasi rekomendasi menggunakan AI.
  
-**🇬🇧** This project was developed as a **Midterm Assignment for the Managerial Behavior Course**. Future development plans include:
-- **Advanced Audit Trail**: In-depth recording of behavioral score changes for HR audit purposes.
-- **Real-time Notifications**: Instant system/email notifications when assessment periods start or forms are submitted.
-- **Machine Learning Integration**: Team recommendation optimization using machine learning to predict future team performance.
-- **Mobile Application**: Mobile version development for easier assessment completion on the go.
+**🇬🇧** Developed as a **Midterm Assignment for the Managerial Behavior Course**.
  
 ---
  
@@ -163,75 +133,40 @@ The system automatically maps who should be assessed by whom based on the organi
 
 | Layer | Technology |
 |---|---|
-| **Framework** | [Next.js 16+](https://nextjs.org/) (App Router) |
-| **Language** | [TypeScript 5+](https://www.typescriptlang.org/) |
-| **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) |
-| **UI Components** | [Shadcn UI](https://ui.shadcn.com/) + [Base UI](https://base-ui.com/) |
-| **Animations** | [Framer Motion](https://www.framer.com/motion/) |
-| **Database** | [PostgreSQL 16+](https://www.postgresql.org/) |
-| **ORM** | [Drizzle ORM](https://orm.drizzle.team/) |
-| **Authentication** | [Better Auth](https://www.better-auth.com/) |
-| **Charts** | [Recharts](https://recharts.org/) |
-| **PDF Generation** | [jspdf](https://github.com/parallax/jsPDF) + [html2canvas](https://html2canvas.hertzen.com/) |
-| **Form Handling** | [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) |
-| **Data Fetching** | [SWR](https://swr.vercel.app/) |
-| **File Storage** | [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) |
+| **Framework** | Next.js 16+ (App Router) |
+| **Language** | TypeScript 5+ |
+| **Styling** | Tailwind CSS 4 |
+| **UI Components** | Shadcn UI |
+| **Database** | PostgreSQL 16+ |
+| **ORM** | Drizzle ORM |
+| **Authentication** | Better Auth |
+| **Charts** | Recharts (Dynamic Scaling) |
+| **PDF Generation** | jsPDF + autoTable |
 
 ---
 
 ## 📂 Struktur Proyek / Project Structure
 
-```
+```bash
 kicob/
 ├── src/
 │   ├── app/
 │   │   ├── (dashboard)/          # Halaman utama aplikasi (protected routes)
-│   │   │   ├── page.tsx          # Dashboard Analitik Utama
+│   │   │   ├── page.tsx          # Dashboard Analitik
 │   │   │   ├── assessment/       # Form & List Penilaian 360
-│   │   │   ├── karyawan/         # Manajemen Data Karyawan
-│   │   │   ├── pengaturan/       # Pengaturan Akun & Profil
-│   │   │   ├── profil/           # Profil Karyawan Individual
+│   │   │   ├── karyawan/         # Manajemen Karyawan & Hirarki
 │   │   │   ├── proyek/           # Manajemen Proyek DSS
-│   │   │   ├── rekomendasi/      # Hasil Rekomendasi Tim
-│   │   │   ├── riwayat/          # Audit Trail & Riwayat
-│   │   │   └── skills/           # Manajemen Master Skill
-│   │   ├── api/                  # API Routes (Next.js Route Handlers)
-│   │   │   ├── assessments/      # CRUD data penilaian
-│   │   │   ├── auth/             # Better Auth handler
-│   │   │   ├── departments/      # CRUD departemen
-│   │   │   ├── employees/        # CRUD data karyawan
-│   │   │   ├── history/          # Audit trail
-│   │   │   ├── periods/          # Manajemen periode penilaian
-│   │   │   ├── positions/        # CRUD jabatan
-│   │   │   ├── projects/         # CRUD proyek DSS
-│   │   │   ├── recommendations/  # Engine rekomendasi
-│   │   │   ├── skills/           # CRUD master skill
-│   │   │   └── user/             # Profil & upload foto
-│   │   ├── login/                # Halaman login
-│   │   ├── globals.css           # Global styles
-│   │   └── layout.tsx            # Root layout
-│   ├── components/
-│   │   ├── layout/               # Sidebar, header, navigasi
-│   │   ├── settings/             # Komponen halaman pengaturan
-│   │   ├── ui/                   # Komponen UI atomik (Shadcn)
-│   │   ├── kpi-card.tsx          # Kartu KPI dashboard
-│   │   ├── score-breakdown.tsx   # Breakdown skor penilaian
-│   │   └── skill-radar-chart.tsx # Radar chart kompetensi
-│   ├── db/
-│   │   ├── schema.ts             # Definisi skema database (Drizzle)
-│   │   ├── index.ts              # Koneksi database
-│   │   └── seed.ts               # Data awal untuk development
-│   ├── hooks/                    # Custom React hooks
-│   └── lib/
-│       ├── auth.ts               # Konfigurasi Better Auth (server)
-│       ├── auth-client.ts        # Better Auth (client-side)
-│       └── auth-context.tsx      # Auth context provider
-├── public/
-│   └── uploads/                  # Foto profil karyawan
-├── .env                          # Variabel lingkungan (JANGAN di-commit!)
-├── .gitignore
-├── drizzle.config.ts             # Konfigurasi Drizzle Kit
-├── next.config.ts                # Konfigurasi Next.js
+│   │   │   ├── rekomendasi/      # Hasil Engine Rekomendasi
+│   │   │   └── pengaturan/       # Master Data (Dept, Jabatan, Periode)
+│   │   ├── api/                  # Route Handlers (JSON API)
+│   │   │   ├── assessments/      # Logic kalkulasi 360
+│   │   │   ├── employees/        # CRUD Karyawan
+│   │   │   └── projects/         # Engine DSS
+│   ├── components/               # UI Atoms & Complex Charts
+│   ├── db/                       # Schema (Drizzle) & Seed Data
+│   └── lib/                      # Auth & Context Providers
+├── public/                       # Static Assets & Screenshots
+├── .env                          # Environment Variables
 ├── package.json
 └── tsconfig.json
 ```
@@ -240,272 +175,84 @@ kicob/
 
 ## 🗄️ Skema Database / Database Schema
 
-Platform ini menggunakan **15 tabel relasional**. Berikut penjelasan tiap tabelnya:
-
-### Tabel Autentikasi (Dikelola oleh Better Auth)
-| Tabel | Deskripsi |
-|---|---|
-| `user` | Data pengguna: nama, email, role (`admin`, `hr`, `manager`, `reviewer`) |
-| `session` | Sesi login aktif pengguna |
-| `account` | Akun provider (email/password, OAuth) |
-| `verification` | Token verifikasi email |
+Platform ini menggunakan **15 tabel relasional** yang dikelola via Drizzle ORM:
 
 ### Tabel Aplikasi Utama
 | Tabel | Deskripsi |
 |---|---|
-| `departments` | Struktur departemen dengan dukungan hierarki (parentId) |
-| `positions` | Jabatan dan level hierarkinya (`job_level` 1–4) |
-| `employees` | Data karyawan, termasuk `supervisor_id` dan `job_level` |
-| `skills` | Master data skill (kategori: `hard` / `soft`) |
-| `employee_skills` | Skill yang dimiliki tiap karyawan beserta levelnya (1–5) |
-| `assessment_periods` | Periode penilaian (misal "Mei 2026"), dengan status `active`/`locked` |
-| `assessments` | Data mentah penilaian 360 per karyawan per periode |
-| `behavioral_scores` | Skor perilaku akhir yang sudah dihitung pembobotan-nya |
-| `projects` | Proyek DSS dengan konfigurasi bobot Hard/Soft |
-| `project_requirements` | Kebutuhan skill per proyek |
-| `team_candidates` | Kandidat tim hasil algoritma rekomendasi |
-| `team_members` | Anggota dari setiap kandidat tim beserta skor kontribusinya |
-| `recommendation_history` | Audit trail persetujuan/penolakan rekomendasi |
+| `user` | Data kredensial pengguna & role akses |
+| `employees` | Profil karyawan, termasuk relasi `supervisor_id` & `job_level` |
+| `positions` | Master jabatan & level hirarki (1-4) |
+| `departments` | Struktur departemen organisasi |
+| `skills` | Master data skill (Hard & Soft) |
+| `assessments` | Data mentah 16 indikator penilaian perilaku (Skala 1-10) |
+| `behavioral_scores` | Skor agregat akhir yang sudah terbobot |
+| `projects` | Proyek DSS dengan konfigurasi prioritas bobot |
+| `assessment_periods` | Periode penilaian (Status: Active/Closed/Locked) |
 
 ### Relasi Kunci / Key Relations
 ```
 user (1) ──────────── (1) employees       [satu user = satu data karyawan]
-employees (1) ──────── (N) assessments    [satu karyawan bisa dinilai berkali-kali]
-assessments (N) ─────── (1) periods       [setiap penilaian terikat ke satu periode]
-projects (1) ──────── (N) project_requirements [setiap proyek punya kebutuhan skill]
-projects (1) ──────── (N) team_candidates  [setiap proyek bisa punya beberapa skenario tim]
+employees (1) ──────── (N) assessments    [satu karyawan dinilai oleh banyak pihak]
+employees (1) ──────── (1) supervisor     [hirarki atasan langsung]
+projects (1) ──────── (N) team_candidates  [beberapa skenario tim per proyek]
 ```
 
 ---
 
 ## ⚙️ Cara Instalasi / Installation Guide
 
-### Prasyarat / Prerequisites
-
-**🇮🇩** Pastikan Anda sudah menginstall software berikut:
-**🇬🇧** Make sure you have the following installed:
-
-- **Node.js** v20 atau lebih baru / v20 or newer — [Download](https://nodejs.org/)
-- **npm** v10+ (sudah termasuk dengan Node.js / included with Node.js)
-- **PostgreSQL** v14 atau lebih baru / v14 or newer — [Download](https://www.postgresql.org/download/)
-- **Git** — [Download](https://git-scm.com/)
-
----
-
-### Langkah 1 — Clone Repositori / Clone Repository
-
+### Langkah 1 — Clone & Install
 ```bash
 git clone https://github.com/username/kicob.git
 cd kicob
-```
-
-### Langkah 2 — Install Dependensi / Install Dependencies
-
-```bash
 npm install
 ```
 
-### Langkah 3 — Buat Database PostgreSQL / Create PostgreSQL Database
-
-**🇮🇩** Buka terminal PostgreSQL atau GUI (contoh: pgAdmin / TablePlus) lalu jalankan:
-**🇬🇧** Open a PostgreSQL terminal or GUI (e.g., pgAdmin / TablePlus) and run:
-
-```sql
-CREATE DATABASE kicob;
-```
-
-### Langkah 4 — Konfigurasi Environment Variables
-
-**🇮🇩** Buat file `.env` di root direktori proyek. File ini **TIDAK AKAN** terupload ke GitHub karena sudah ada di `.gitignore`.
-**🇬🇧** Create a `.env` file in the project root directory. This file will **NOT** be uploaded to GitHub as it is already in `.gitignore`.
-
+### Langkah 2 — Database Setup
+**🇮🇩** Buat database PostgreSQL bernama `kicob`, lalu set di `.env`:
 ```env
-# ─── Database ───────────────────────────────────────────────────
-# Format: postgres://USER:PASSWORD@HOST:PORT/DATABASE_NAME
-DATABASE_URL=postgres://postgres:yourpassword@localhost:5432/kicob
-
-# ─── Better Auth ────────────────────────────────────────────────
-# Ganti dengan string acak yang panjang dan aman / Replace with a long, secure random string
-BETTER_AUTH_SECRET=ganti_dengan_string_rahasia_yang_sangat_panjang_dan_acak
-
-# URL aplikasi kamu saat development / Your app URL during development
+DATABASE_URL=postgres://user:password@localhost:5432/kicob
+BETTER_AUTH_SECRET=long_random_string
 BETTER_AUTH_URL=http://localhost:3000
 ```
 
-> ⚠️ **PERINGATAN / WARNING**: Jangan pernah meng-commit file `.env` ke GitHub. Pastikan `.env*` sudah ada di `.gitignore` kamu. / Never commit the `.env` file to GitHub. Make sure `.env*` is already in your `.gitignore`.
-
-### Langkah 5 — Sinkronisasi Skema Database / Sync Database Schema
-
-**🇮🇩** Perintah ini akan membuat semua tabel di database secara otomatis berdasarkan `src/db/schema.ts`.
-**🇬🇧** This command will automatically create all tables in the database based on `src/db/schema.ts`.
-
+### Langkah 3 — Sinkronisasi & Run
 ```bash
 npm run db:push
-```
-
-### Langkah 6 — (Opsional) Isi Data Awal / (Optional) Seed Initial Data
-
-**🇮🇩** Mengisi data dummy untuk keperluan development dan testing.
-**🇬🇧** Populates dummy data for development and testing purposes.
-
-```bash
 npm run db:seed
-```
-
-### Langkah 7 — Jalankan Development Server / Run Development Server
-
-```bash
 npm run dev
 ```
 
-**🇮🇩** Buka browser dan akses: **🇬🇧** Open your browser and navigate to:
-```
-http://localhost:3000
-```
-
 ---
 
-## 📖 Panduan Penggunaan / User Guide
-
-### Alur Kerja Utama / Main Workflow
-
-```
-[Admin/HR Setup] ──► [Karyawan Mengisi Assessment] ──► [Sistem Menghitung Skor]
-       │                                                          │
-       ▼                                                          ▼
-[Buat Data Master]                                    [Manager Buat Proyek DSS]
-(Dept, Jabatan, Skill)                                          │
-                                                                 ▼
-                                                  [Jalankan Engine Rekomendasi]
-                                                                 │
-                                                                 ▼
-                                                  [Review & Setujui Rekomendasi Tim]
-```
-
----
-
-## 🔐 Keamanan & Demo / Security & Demo
- 
-**🇮🇩** Untuk menjaga integritas data selama periode penilaian UTS:
-- **Registrasi Publik Dimatikan**: Fitur pendaftaran akun baru dinonaktifkan untuk mencegah akses tidak sah.
-- **Kredensial Live**: Akun untuk mencoba website ini secara langsung bersifat privat (silakan hubungi pengembang).
-- **Development**: Untuk mencoba secara lokal, jalankan `npm run db:seed`. Detail akun (email/password) dapat dilihat langsung di file `src/db/seed.ts`.
- 
-**🇬🇧** To maintain data integrity during the UTS assessment period:
-- **Public Registration Disabled**: New account sign-ups are disabled to prevent unauthorized access.
-- **Live Credentials**: Accounts for testing the live website are private (please contact the developer).
-- **Development**: For local testing, refer to `src/db/seed.ts` for account details after running the seed script.
- 
----
- 
-## 📸 Screenshots
- 
-<div align="center">
-  <p><i>Halaman Dashboard Utama / Main Dashboard Page</i></p>
-  <img src="public/screenshots/dashboard.png" alt="Dashboard" width="800" />
- 
-  <br/><br/>
- 
-  <p><i>Halaman Daftar Proyek / Projects List Page</i></p>
-  <img src="public/screenshots/proyek.png" alt="Proyek" width="800" />
- 
-  <br/><br/>
- 
-  <p><i>Hasil Rekomendasi Tim DSS / DSS Team Recommendation Results</i></p>
-  <img src="public/screenshots/rekomendasi.png" alt="Recommendations" width="800" />
-</div>
- 
----
- 
-### 👤 Akun Admin / Admin Account
-
-**🇮🇩** Saat pertama kali menjalankan aplikasi (setelah seed), gunakan kredensial berikut untuk login sebagai Admin:
-**🇬🇧** When first running the application (after seeding), use the following credentials to log in as Admin:
-
-> Kredensial default ada di file `src/db/seed.ts`. Segera ubah password setelah login pertama!
-> Default credentials are in `src/db/seed.ts`. Change your password immediately after the first login!
-
----
-
-### 📋 Tutorial Langkah demi Langkah / Step-by-Step Tutorial
+## 📋 Tutorial Langkah demi Langkah / Step-by-Step Tutorial
 
 #### Step 1: Setup Organisasi (Admin/HR)
-1. Login sebagai Admin atau HR.
-2. Buka **Pengaturan** → Tambah **Departemen** yang ada di perusahaan.
-3. Buka **Pengaturan** → Tambah **Jabatan** dan tentukan **Job Level**-nya:
-   - Level 1 = Staff
-   - Level 2 = Supervisor
-   - Level 3 = Manager
-   - Level 4 = Director
-4. Tambah **Skill** di menu **Skills** (contoh: Python, Leadership, Komunikasi).
+1. Buka **Pengaturan** → Tambah **Departemen** dan **Jabatan**.
+2. Pastikan **Job Level** (1-4) sudah sesuai (Level 4 untuk Direktur/Admin).
+3. Tambahkan master **Skill** di menu Skills.
 
-#### Step 2: Input Data Karyawan (HR)
+#### Step 2: Input Karyawan & Atasan (HR)
 1. Buka menu **Karyawan** → Klik **Tambah Karyawan**.
-2. Isi data: nama, email, departemen, jabatan, dan **Supervisor** (atasan langsung).
-3. Tambahkan skill yang dimiliki karyawan beserta levelnya (1–5) di halaman profil.
+2. Pilih akun user, jabatan, dan **Supervisor** (Atasan Langsung).
+3. Level jabatan akan otomatis sinkron berdasarkan posisi yang dipilih.
 
-#### Step 3: Buat Periode Penilaian (HR)
-1. Buka **Pengaturan** → Buat **Periode Baru** (contoh: "Mei 2026").
-2. Set periode tersebut sebagai **Aktif**.
+#### Step 4: Proses Assessment (User)
+1. HR mengaktifkan **Periode Penilaian** baru.
+2. User login → Menu **Assessment** → Pilih target penilaian.
+3. Isi 16 indikator perilaku (Skala 1-10). Skor otomatis dihitung setelah submit.
 
-#### Step 4: Proses Assessment (Semua User)
-1. Karyawan login ke dashboard masing-masing.
-2. Buka menu **Assessment** → Sistem akan otomatis menampilkan siapa saja yang bisa dinilai (berdasarkan relasi Supervisor/Peer/Self).
-3. Isi form penilaian untuk masing-masing indikator (skala 1–5).
-4. Submit form. Data tersimpan dan skor agregat otomatis dikalkulasi.
-
-#### Step 5: Rekomendasi Tim Proyek (Manager/Admin)
+#### Step 5: Rekomendasi Tim (Manager)
 1. Buka menu **Proyek** → Klik **Buat Proyek Baru**.
-2. Isi nama proyek, deskripsi, ukuran tim, dan bobot prioritas (Hard vs Soft).
-3. Tambahkan **Skill Requirements** (skill apa yang dibutuhkan dan level minimalnya).
-4. Klik **Generate Rekomendasi**. Sistem akan memproses dan menampilkan daftar kandidat.
-5. Review ranking kandidat → Setujui atau tolak di halaman **Rekomendasi**.
-
-#### Step 6: Monitoring & Ekspor
-1. Pantau performa keseluruhan di halaman **Dashboard**.
-2. Buka profil karyawan untuk melihat **Radar Chart** kompetensinya.
-3. Klik **Cetak Laporan** untuk mengunduh laporan PDF.
-4. Cek **Riwayat** untuk melihat audit trail semua aktivitas.
-
----
-
-## 🔧 Scripts yang Tersedia / Available Scripts
-
-| Script | Perintah / Command | Fungsi / Function |
-|---|---|---|
-| Development | `npm run dev` | Menjalankan server development |
-| Build | `npm run build` | Build untuk production |
-| Start | `npm run start` | Menjalankan build production |
-| Lint | `npm run lint` | Memeriksa kualitas kode |
-| DB Push | `npm run db:push` | Sinkronisasi skema ke database |
-| DB Seed | `npm run db:seed` | Mengisi data awal |
-| DB Studio | `npm run db:studio` | Membuka Drizzle Studio (GUI database) |
-
----
-
-## 🤝 Kontribusi / Contributing
-
-**🇮🇩** Kontribusi sangat disambut! Silakan ikuti langkah berikut:
-**🇬🇧** Contributions are welcome! Please follow these steps:
-
-1. Fork repositori ini.
-2. Buat branch baru: `git checkout -b feature/nama-fitur-kamu`
-3. Commit perubahan: `git commit -m 'feat: tambahkan fitur X'`
-4. Push ke branch: `git push origin feature/nama-fitur-kamu`
-5. Buat Pull Request.
-
----
-
-## 📄 Lisensi / License
-
-**🇮🇩** Proyek ini dilisensikan di bawah lisensi **MIT**. Lihat file [LICENSE](LICENSE) untuk detail lebih lanjut.
-**🇬🇧** This project is licensed under the **MIT** License. See the [LICENSE](LICENSE) file for more details.
+2. Tentukan kebutuhan skill. Klik **Generate Rekomendasi**.
+3. Pilih tim terbaik berdasarkan ranking DSS.
 
 ---
 
 <div align="center">
 
-Dibuat dengan ❤️ untuk solusi manajemen SDM berbasis data.
-*Built with ❤️ for data-driven human resource management.*
+Dibuat dengan ❤️ untuk UTS Mata Kuliah Perilaku Manajerial.
+*Built with ❤️ for the Managerial Behavior Midterm Project.*
 
 </div>

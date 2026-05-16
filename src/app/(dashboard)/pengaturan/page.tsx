@@ -207,27 +207,29 @@ export default function PengaturanPage() {
                         <td className="py-4 px-6 font-medium">{user.name}</td>
                         <td className="py-4 px-6 text-muted-foreground">{user.email}</td>
                         <td className="py-4 px-6">
-                          <Badge variant="secondary" className="capitalize bg-primary/10 text-primary border-primary/20">
-                            {user.role}
+                          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-[10px]">
+                            {user.role === 'admin' ? 'Administrator' : 
+                             user.role === 'hr' ? 'HRD' : 
+                             user.role === 'manager' ? 'Manajer/Lead' : 'Karyawan'}
                           </Badge>
                         </td>
                         <td className="py-4 px-6">
                           <Select
-                            defaultValue={user.role}
+                            value={user.role}
                             onValueChange={(val: string | null) => val && handleUpdateRole(user.id, val)}
                           >
-                            <SelectTrigger className="w-36 h-8 text-xs rounded-lg border-border/30">
+                            <SelectTrigger className="w-48 h-9 text-xs rounded-lg border-border/30 bg-white/5">
                               <SelectValue placeholder="Pilih Role">
-                                {user.role === 'admin' ? 'Administrator' : 
-                                 user.role === 'manager' ? 'Manajer' : 
-                                 user.role === 'hr' ? 'HRD' : 'Penilai'}
+                                {user.role === 'admin' ? 'Administrator (Lvl 4)' : 
+                                 user.role === 'hr' ? 'HRD (Lvl 3)' : 
+                                 user.role === 'manager' ? 'Manajer/Lead (Lvl 2)' : 'Karyawan (Lvl 1)'}
                               </SelectValue>
                             </SelectTrigger>
-                            <SelectContent className="border-border/30 bg-slate-900 min-w-[150px]">
-                              <SelectItem value="admin">Administrator</SelectItem>
-                              <SelectItem value="manager">Manajer</SelectItem>
-                              <SelectItem value="hr">HRD</SelectItem>
-                              <SelectItem value="reviewer">Penilai</SelectItem>
+                            <SelectContent className="border-border/30 bg-slate-900 min-w-[200px]">
+                              <SelectItem value="admin" className="py-2.5 text-xs">Administrator (Level 4)</SelectItem>
+                              <SelectItem value="hr" className="py-2.5 text-xs">HRD (Level 3)</SelectItem>
+                              <SelectItem value="manager" className="py-2.5 text-xs">Manajer/Lead (Level 2)</SelectItem>
+                              <SelectItem value="reviewer" className="py-2.5 text-xs">Karyawan (Level 1)</SelectItem>
                             </SelectContent>
                           </Select>
                         </td>
@@ -351,6 +353,10 @@ function MasterDataContent() {
 
   const [newDept, setNewDept] = useState("");
   const [newPos, setNewPos] = useState("");
+  const [newPosLevel, setNewPosLevel] = useState("1");
+  const [editingPos, setEditingPos] = useState<any>(null);
+  const [editPosName, setEditPosName] = useState("");
+  const [editPosLevel, setEditPosLevel] = useState("1");
 
   const handleAddDept = async () => {
     if (!newDept) return;
@@ -368,9 +374,21 @@ function MasterDataContent() {
     await fetch("/api/positions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newPos }),
+      body: JSON.stringify({ name: newPos, jobLevel: Number(newPosLevel) }),
     });
     setNewPos("");
+    setNewPosLevel("1");
+    mutatePositions();
+  };
+
+  const handleUpdatePos = async () => {
+    if (!editingPos) return;
+    await fetch("/api/positions", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: editingPos.id, name: editPosName, jobLevel: Number(editPosLevel) }),
+    });
+    setEditingPos(null);
     mutatePositions();
   };
 
@@ -432,33 +450,100 @@ function MasterDataContent() {
           </div>
         </div>
 
-        <div className="flex gap-2 mb-6">
+        <div className="flex flex-col sm:flex-row gap-2 mb-6">
           <Input
-            placeholder="Tambah jabatan baru..."
+            placeholder="Nama jabatan..."
             value={newPos}
             onChange={(e) => setNewPos(e.target.value)}
-            className="rounded-xl border-border/30"
+            className="rounded-xl border-border/30 flex-1"
           />
-          <Button onClick={handleAddPos} size="sm" className="rounded-xl">
+          <Select value={newPosLevel} onValueChange={(v) => v && setNewPosLevel(v)}>
+            <SelectTrigger className="w-full sm:w-24 h-10 rounded-xl bg-white/5 border-border/30">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 border-border/30">
+              <SelectItem value="1">Lvl 1</SelectItem>
+              <SelectItem value="2">Lvl 2</SelectItem>
+              <SelectItem value="3">Lvl 3</SelectItem>
+              <SelectItem value="4">Lvl 4</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={handleAddPos} size="sm" className="rounded-xl h-10 px-4">
             <Plus className="w-4 h-4" />
           </Button>
         </div>
 
         <div className="space-y-2">
-          {positions?.map((pos) => (
+          {positions?.sort((a,b) => b.jobLevel - a.jobLevel).map((pos) => (
             <div key={pos.id} className="flex items-center justify-between p-3 rounded-xl bg-accent/5 border border-border/10 group hover:border-primary/20 transition-colors">
-              <span className="font-medium text-sm">{pos.name}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleDelete("positions", pos.id)}
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-              >
-                <X className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-3">
+                <Badge variant="outline" className="h-5 px-1.5 text-[10px] border-primary/30 text-primary">Lvl {pos.jobLevel}</Badge>
+                <span className="font-medium text-sm">{pos.name}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setEditingPos(pos);
+                    const selectedPos = positions?.find(p => String(p.id) === String(pos.id));
+                    if (selectedPos && selectedPos.jobLevel) {
+                      setEditPosLevel(String(selectedPos.jobLevel));
+                    }
+                    setEditPosName(pos.name);
+                  }}
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-amber-400"
+                >
+                  <UserCog className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete("positions", pos.id)}
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>
+
+        {/* Edit Position Dialog */}
+        <Dialog open={!!editingPos} onOpenChange={(open) => !open && setEditingPos(null)}>
+          <DialogContent className="bg-slate-950 border-border/30">
+            <DialogHeader>
+              <DialogTitle>Edit Jabatan</DialogTitle>
+              <DialogDescription>Ubah nama atau level hirarki jabatan ini.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-xs font-semibold">Nama Jabatan</label>
+                <Input value={editPosName} onChange={(e) => setEditPosName(e.target.value)} className="rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold">Level Hirarki</label>
+                <Select value={editPosLevel} onValueChange={(v) => v && setEditPosLevel(v)}>
+                  <SelectTrigger className="rounded-xl h-11 bg-white/5 border-border/30">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="border-border/30 bg-slate-900 min-w-[300px]">
+                    <SelectItem value="1" className="py-2.5">Level 1 — Karyawan (Staff)</SelectItem>
+                    <SelectItem value="2" className="py-2.5">Level 2 — Manajer/Lead (Supervisor)</SelectItem>
+                    <SelectItem value="3" className="py-2.5">Level 3 — HRD (Manager)</SelectItem>
+                    <SelectItem value="4" className="py-2.5">Level 4 — Administrator (Director)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <DialogClose>
+                <Button variant="ghost">Batal</Button>
+              </DialogClose>
+              <Button onClick={handleUpdatePos} className="glow-button">Simpan Perubahan</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </motion.div>
     </div>
   );

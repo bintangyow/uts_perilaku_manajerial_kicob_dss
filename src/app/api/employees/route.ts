@@ -19,6 +19,7 @@ export async function GET() {
       department: departments.name, // Get name from joined table
       position: positions.name, // Get name from joined table
       jobLevel: employees.jobLevel,
+      supervisorId: employees.supervisorId,
       status: employees.status,
       name: user.name,
       email: user.email,
@@ -64,7 +65,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, employeeCode, department, position, jobLevel, status } = body;
+    const { userId, employeeCode, department, position, jobLevel, status, supervisorId } = body;
 
     if (!userId || !employeeCode || !department || !position || !jobLevel) {
       return Response.json({ error: "Missing required fields" }, { status: 400 });
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
         employeeCode,
         departmentId: body.departmentId,
         positionId: body.positionId,
+        supervisorId: supervisorId ? Number(supervisorId) : null,
         jobLevel: Number(jobLevel),
         status: status || "active",
       })

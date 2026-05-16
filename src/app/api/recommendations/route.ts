@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
         let softFactorSum = 0;
         if (scores.length > 0) {
           const total = scores.reduce((sum, s) => sum + (Number(s.finalBehaviorScore) || 0), 0);
-          softFactorSum = (total / (scores.length * 5)) * 100;
+          softFactorSum = (total / (scores.length * 10)) * 100;
         }
 
         const hWeight = Number(project.hardSkillWeight) || 0.6;

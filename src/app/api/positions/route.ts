@@ -27,3 +27,16 @@ export async function DELETE(request: NextRequest) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const { id, name, jobLevel } = await request.json();
+    const [updated] = await db.update(positions)
+      .set({ name, jobLevel })
+      .where(eq(positions.id, id))
+      .returning();
+    return Response.json(updated);
+  } catch (error: any) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+}

@@ -47,6 +47,7 @@ export default function KaryawanPage() {
   const [formDeptId, setFormDeptId] = useState("");
   const [formPosId, setFormPosId] = useState("");
   const [formJobLevel, setFormJobLevel] = useState("1");
+  const [formSupervisorId, setFormSupervisorId] = useState("");
   const [editingEmp, setEditingEmp] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -88,6 +89,7 @@ export default function KaryawanPage() {
         department: departmentsMaster?.find(d => String(d.id) === formDeptId)?.name,
         position: positionsMaster?.find(p => String(p.id) === formPosId)?.name,
         jobLevel: formJobLevel,
+        supervisorId: formSupervisorId ? Number(formSupervisorId) : null,
         status: "active",
       }),
     });
@@ -97,8 +99,19 @@ export default function KaryawanPage() {
     setFormUserId("");
     setFormDeptId("");
     setFormPosId("");
+    setFormJobLevel("1");
+    setFormSupervisorId("");
     setIsSubmitting(false);
     setDialogOpen(false);
+  };
+
+  const handlePositionChange = (posId: string | null) => {
+    if (!posId) return;
+    setFormPosId(posId);
+    const selectedPos = positionsMaster?.find(p => String(p.id) === posId);
+    if (selectedPos && selectedPos.jobLevel) {
+      setFormJobLevel(String(selectedPos.jobLevel));
+    }
   };
 
   const handleDeleteEmployee = async (id: number) => {
@@ -128,6 +141,7 @@ export default function KaryawanPage() {
           department: departmentsMaster?.find(d => String(d.id) === formDeptId)?.name,
           position: positionsMaster?.find(p => String(p.id) === formPosId)?.name,
           jobLevel: Number(formJobLevel),
+          supervisorId: formSupervisorId ? Number(formSupervisorId) : null,
         }),
       });
       await mutate();
@@ -202,9 +216,9 @@ export default function KaryawanPage() {
                         {departmentsMaster?.find(d => String(d.id) === formDeptId)?.name}
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)]">
+                    <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)] min-w-[280px]">
                       {departmentsMaster?.map((d) => (
-                        <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                        <SelectItem key={d.id} value={String(d.id)} className="py-2.5">{d.name}</SelectItem>
                       ))}
                       {(!departmentsMaster || departmentsMaster.length === 0) && (
                         <div className="p-2 text-xs text-center text-muted-foreground">Belum ada departemen</div>
@@ -214,7 +228,7 @@ export default function KaryawanPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Posisi / Jabatan</Label>
-                  <Select value={formPosId} onValueChange={(v) => v && setFormPosId(v)}>
+                  <Select value={formPosId} onValueChange={handlePositionChange}>
                     <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-12">
                       <SelectValue placeholder="Pilih Jabatan">
                         {positionsMaster?.find(p => String(p.id) === formPosId)?.name}
@@ -237,13 +251,34 @@ export default function KaryawanPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)] min-w-[240px]">
-                        <SelectItem value="1" className="py-2.5">Level 1 (Staff)</SelectItem>
-                        <SelectItem value="2" className="py-2.5">Level 2 (Supervisor)</SelectItem>
-                        <SelectItem value="3" className="py-2.5">Level 3 (Manager)</SelectItem>
-                        <SelectItem value="4" className="py-2.5">Level 4 (Director/Owner)</SelectItem>
+                        <SelectItem value="1" className="py-2.5">Level 1 — Karyawan (Staff)</SelectItem>
+                        <SelectItem value="2" className="py-2.5">Level 2 — Manajer/Lead (Supervisor)</SelectItem>
+                        <SelectItem value="3" className="py-2.5">Level 3 — HRD (Manager)</SelectItem>
+                        <SelectItem value="4" className="py-2.5">Level 4 — Administrator (Director)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {Number(formJobLevel) < 4 && (
+                    <div className="space-y-2">
+                      <Label>Pilih Atasan (Supervisor)</Label>
+                      <Select value={formSupervisorId} onValueChange={(v) => v && setFormSupervisorId(v)}>
+                        <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-12">
+                          <SelectValue placeholder="Pilih Atasan">
+                            {formSupervisorId ? employees?.find(e => String(e.id) === formSupervisorId)?.name : "Pilih Atasan"}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)]">
+                          {employees?.filter(e => e.jobLevel > Number(formJobLevel)).map((e) => (
+                            <SelectItem key={e.id} value={String(e.id)}>{e.name} (Lvl {e.jobLevel})</SelectItem>
+                          ))}
+                          {employees?.filter(e => e.jobLevel > Number(formJobLevel)).length === 0 && (
+                            <div className="p-2 text-xs text-center text-muted-foreground">Belum ada karyawan dengan level lebih tinggi</div>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 <div className="flex gap-3 pt-2">
                   <DialogClose className="rounded-xl border border-border/30 h-12 px-6 hover:bg-white/5 transition-colors text-sm font-medium">
                     Batal
@@ -409,6 +444,7 @@ export default function KaryawanPage() {
                               setFormDeptId(String(emp.departmentId || ""));
                               setFormPosId(String(emp.positionId || ""));
                               setFormJobLevel(String(emp.jobLevel));
+                              setFormSupervisorId(String(emp.supervisorId || ""));
                             }}
                             className="text-amber-400 hover:bg-amber-500/10 h-8 w-8 p-0 ml-1"
                           >
@@ -475,12 +511,12 @@ export default function KaryawanPage() {
                 <Select value={formDeptId} onValueChange={(v) => v && setFormDeptId(v)}>
                   <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-12">
                     <SelectValue>
-                      {departmentsMaster?.find(d => String(d.id) === formDeptId)?.name || positionsMaster?.find(p => String(p.id) === formPosId)?.name}
+                      {departmentsMaster?.find(d => String(d.id) === formDeptId)?.name}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)]">
+                  <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)] min-w-[280px]">
                     {departmentsMaster?.map((d) => (
-                      <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                      <SelectItem key={d.id} value={String(d.id)} className="py-2.5">{d.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -488,10 +524,10 @@ export default function KaryawanPage() {
 
               <div className="space-y-2">
                 <Label>Posisi / Jabatan</Label>
-                <Select value={formPosId} onValueChange={(v) => v && setFormPosId(v)}>
+                <Select value={formPosId} onValueChange={handlePositionChange}>
                   <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-12">
                     <SelectValue>
-                      {departmentsMaster?.find(d => String(d.id) === formDeptId)?.name || positionsMaster?.find(p => String(p.id) === formPosId)?.name}
+                      {positionsMaster?.find(p => String(p.id) === formPosId)?.name}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)] min-w-[280px]">
@@ -509,13 +545,31 @@ export default function KaryawanPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)] min-w-[240px]">
-                    <SelectItem value="1" className="py-2.5">Level 1 (Staff)</SelectItem>
-                    <SelectItem value="2" className="py-2.5">Level 2 (Supervisor)</SelectItem>
-                    <SelectItem value="3" className="py-2.5">Level 3 (Manager)</SelectItem>
-                    <SelectItem value="4" className="py-2.5">Level 4 (Director/Owner)</SelectItem>
+                    <SelectItem value="1" className="py-2.5">Level 1 — Karyawan (Staff)</SelectItem>
+                    <SelectItem value="2" className="py-2.5">Level 2 — Manajer/Lead (Supervisor)</SelectItem>
+                    <SelectItem value="3" className="py-2.5">Level 3 — HRD (Manager)</SelectItem>
+                    <SelectItem value="4" className="py-2.5">Level 4 — Administrator (Director)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
+              {Number(formJobLevel) < 4 && (
+                <div className="space-y-2">
+                  <Label>Pilih Atasan (Supervisor)</Label>
+                  <Select value={formSupervisorId} onValueChange={(v) => v && setFormSupervisorId(v)}>
+                    <SelectTrigger className="bg-input/30 border-border/30 rounded-xl h-12">
+                      <SelectValue placeholder="Pilih Atasan">
+                        {formSupervisorId ? employees?.find(e => String(e.id) === formSupervisorId)?.name : "Pilih Atasan"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="border-border/30 bg-[oklch(0.16_0.04_260)]">
+                      {employees?.filter(e => e.jobLevel > Number(formJobLevel) && e.id !== editingEmp.id).map((e) => (
+                        <SelectItem key={e.id} value={String(e.id)}>{e.name} (Lvl {e.jobLevel})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div className="flex gap-3 pt-2">
                 <DialogClose className="rounded-xl border border-border/30 h-12 px-6 hover:bg-white/5 transition-colors text-sm font-medium flex-1">

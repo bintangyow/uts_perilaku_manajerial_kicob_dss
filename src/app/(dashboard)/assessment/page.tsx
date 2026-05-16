@@ -211,16 +211,29 @@ export default function AssessmentPage() {
                       )}
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <Badge
-                        variant="secondary"
-                        className={`text-[10px] ${
-                          emp.totalAssessmentsInPeriod >= (emp.jobLevel > 1 ? 3 : 3) // simplistic logic, just checking if enough are there
-                            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20"
-                            : "bg-amber-500/15 text-amber-400 border-amber-500/20"
-                        }`}
-                      >
-                        {emp.totalAssessmentsInPeriod >= 3 ? "Lengkap" : `${emp.totalAssessmentsInPeriod}/3 Selesai`}
-                      </Badge>
+                      {(() => {
+                        // Logic Pintar:
+                        // Lvl 1: Target 3 (Self, Peer, Supervisor)
+                        // Lvl 2-3: Target 4 (Self, Peer, Supervisor, Upward)
+                        // Lvl 4: Target 3 (Self, Peer, Upward) -> Tidak butuh Supervisor
+                        let target = 3;
+                        if (emp.jobLevel === 2 || emp.jobLevel === 3) target = 4;
+                        if (emp.jobLevel === 4) target = 3;
+
+                        const isComplete = emp.totalAssessmentsInPeriod >= target;
+                        return (
+                          <Badge
+                            variant="secondary"
+                            className={`text-[10px] ${
+                              isComplete
+                                ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20"
+                                : "bg-amber-500/15 text-amber-400 border-amber-500/20"
+                            }`}
+                          >
+                            {isComplete ? "Lengkap" : `${emp.totalAssessmentsInPeriod}/${target} Selesai`}
+                          </Badge>
+                        );
+                      })()}
                     </td>
                     <td className="py-3 px-4 text-center">
                       <Link href={`/assessment/${emp.id}`}>
@@ -237,8 +250,13 @@ export default function AssessmentPage() {
         )}
 
         {!isLoading && filtered.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground text-sm">
-            Tidak ada data assessment yang cocok.
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mb-4">
+              <ClipboardCheck className="w-8 h-8 text-muted-foreground/40" />
+            </div>
+            <p className="text-muted-foreground text-sm max-w-[200px]">
+              Tidak ada data assessment yang cocok untuk filter ini.
+            </p>
           </div>
         )}
       </motion.div>

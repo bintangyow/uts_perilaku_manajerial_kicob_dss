@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { db } from "@/db";
-import { assessments, behavioralScores, employees, user, assessmentPeriods, departments, positions } from "@/db/schema";
+import { assessments, behavioralScores, assessmentPeriods, employees, user, departments, positions } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
@@ -15,7 +15,6 @@ export async function GET(request: NextRequest) {
     return Response.json(result);
   }
 
-  // Return assessments grouped by employee, joined with user for names
   const allEmployees = await db
     .select({
       id: employees.id,
@@ -39,7 +38,7 @@ export async function GET(request: NextRequest) {
       assessorName: assessments.assessorName,
       employeeId: assessments.employeeId,
       assessmentType: assessments.assessmentType,
-      periodName: assessmentPeriods.name, // To replace the deleted 'period' column
+      periodName: assessmentPeriods.name,
     })
     .from(assessments)
     .leftJoin(assessmentPeriods, eq(assessments.periodId, assessmentPeriods.id));
@@ -57,137 +56,117 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const {
-    assessorName,
-    employeeId,
-    assessmentType,
-    emotionalStability,
-    communication,
-    teamwork,
-    adaptability,
-    period,
-    notes,
-  } = body;
+  try {
+    const body = await request.json();
+    const { assessorName, employeeId, assessmentType, notes, ...rest } = body;
 
-  // Get the currently active period from database
-  const activePeriod = await db.query.assessmentPeriods.findFirst({
-    where: eq(assessmentPeriods.isCurrent, true)
-  });
+    const activePeriod = await db.query.assessmentPeriods.findFirst({
+      where: eq(assessmentPeriods.isCurrent, true)
+    });
 
-  // BLOCK: If period is closed or locked, refuse new assessments
-  if (activePeriod && activePeriod.status !== "active") {
-    return Response.json({ 
-      error: `Periode ${activePeriod.name} saat ini sedang ${activePeriod.status === 'closed' ? 'ditutup' : 'dikunci'}. Penilaian baru tidak diizinkan.` 
-    }, { status: 403 });
-  }
+    if (activePeriod && activePeriod.status !== "active") {
+      return Response.json({ error: `Periode ${activePeriod.name} sedang ${activePeriod.status}.` }, { status: 403 });
+    }
 
-  const currentPeriodName = activePeriod?.name || period || new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date());
-  const currentPeriodId = activePeriod?.id || null;
+    const currentPeriodId = activePeriod?.id || null;
+    const empId = Number(employeeId);
 
-  if (!assessorName || !employeeId || !assessmentType) {
-    return Response.json({ error: "Missing required fields" }, { status: 400 });
-  }
+    // 1. Duplicate Check
+    const existing = await db.select().from(assessments).where(and(
+      eq(assessments.employeeId, empId),
+      eq(assessments.assessorName, assessorName),
+      currentPeriodId ? eq(assessments.periodId, currentPeriodId) : undefined
+    ));
+    if (existing.length > 0) return Response.json({ error: "Anda sudah memberikan penilaian." }, { status: 400 });
 
-  const empId = Number(employeeId);
+    // 2. Dynamic Calculation of Theme Averages
+    const getThemeAvg = (prefix: string) => {
+      // Find all keys in 'rest' that start with this prefix (e.g., 'es', 'comm')
+      const keys = Object.keys(rest).filter(k => k.startsWith(prefix));
+      if (keys.length === 0) return 0;
+      const vals = keys.map(k => Number(rest[k] || 0));
+      return vals.reduce((a, b) => a + b, 0) / vals.length;
+    };
 
-  // 1. Prevent Duplicate Assessment (Same assessor, same employee, same period)
-  const existingAss = await db
-    .select()
-    .from(assessments)
-    .where(
-      and(
-        eq(assessments.employeeId, empId),
-        eq(assessments.assessorName, assessorName),
-        currentPeriodId ? eq(assessments.periodId, currentPeriodId) : undefined
-      )
-    );
-  
-  if (existingAss.length > 0) {
-    return Response.json({ error: "Anda sudah memberikan penilaian untuk karyawan ini di periode ini." }, { status: 400 });
-  }
+    const es = getThemeAvg('es');
+    const cm = getThemeAvg('comm');
+    const tw = getThemeAvg('tw');
+    const ad = getThemeAvg('ad');
 
-  // 2. Calculate consistency score
-  const avg = (emotionalStability + communication + teamwork + adaptability) / 4;
-  const diffs = [emotionalStability, communication, teamwork, adaptability].map((v) => Math.abs(v - avg));
-  const consistencyScore = Math.max(0, 1 - diffs.reduce((a, b) => a + b, 0) / 4);
-
-  const [newAssessment] = await db
-    .insert(assessments)
-    .values({
+    // 3. Insert Assessment
+    const [newAssessment] = await db.insert(assessments).values({
       assessorName,
       employeeId: empId,
       assessmentType,
-      emotionalStability: emotionalStability.toString(),
-      communication: communication.toString(),
-      teamwork: teamwork.toString(),
-      adaptability: adaptability.toString(),
-      consistencyScore: (Math.round(consistencyScore * 100) / 100).toString(),
       periodId: currentPeriodId,
       notes: notes || null,
-    })
-    .returning();
+      emotionalStability: es.toFixed(2),
+      communication: cm.toFixed(2),
+      teamwork: tw.toFixed(2),
+      adaptability: ad.toFixed(2),
+      scores: rest,
+      consistencyScore: "0",
+    }).returning();
 
-  // 3. Recalculate behavioral score using WEIGHTED AVERAGE
-  const empAssessments = await db.select().from(assessments).where(eq(assessments.employeeId, empId));
+    // 4. Update Behavioral Scores (Weighted 360)
+    const allAss = await db.select().from(assessments).where(eq(assessments.employeeId, empId));
+    const weightMap: Record<string, number> = { supervisor: 0.5, peer: 0.3, self: 0.2, upward: 0.1 };
 
-  const weightedCalc = {
-    supervisor: { es: 0, cm: 0, tw: 0, ad: 0, count: 0, weight: 0.5 },
-    upward: { es: 0, cm: 0, tw: 0, ad: 0, count: 0, weight: 0.5 },
-    peer: { es: 0, cm: 0, tw: 0, ad: 0, count: 0, weight: 0.3 },
-    self: { es: 0, cm: 0, tw: 0, ad: 0, count: 0, weight: 0.2 },
-  };
+    const aggregate = () => {
+      const keys = Array.from(new Set(allAss.flatMap(a => Object.keys(a.scores || {}))));
+      const avgs: Record<string, number> = {};
+      
+      keys.forEach(k => {
+        let wSum = 0, wTotal = 0;
+        allAss.forEach(a => {
+          const w = weightMap[a.assessmentType] || 0.1;
+          const v = Number(a.scores?.[k] || 0);
+          if (v > 0) { wSum += v * w; wTotal += w; }
+        });
+        avgs[k] = wTotal > 0 ? Number((wSum / wTotal).toFixed(2)) : 0;
+      });
+      return avgs;
+    };
 
-  empAssessments.forEach((a) => {
-    const type = a.assessmentType as keyof typeof weightedCalc;
-    if (weightedCalc[type]) {
-      weightedCalc[type].es += Number(a.emotionalStability);
-      weightedCalc[type].cm += Number(a.communication);
-      weightedCalc[type].tw += Number(a.teamwork);
-      weightedCalc[type].ad += Number(a.adaptability);
-      weightedCalc[type].count++;
-    }
-  });
+    const finalDetails = aggregate();
+    
+    // Calculate theme averages from aggregated dynamic details
+    const getFinalThemeAvg = (prefix: string) => {
+      const keys = Object.keys(finalDetails).filter(k => k.startsWith(prefix));
+      if (keys.length === 0) return 0;
+      return keys.reduce((acc, k) => acc + finalDetails[k], 0) / keys.length;
+    };
 
-  let totalWeight = 0;
-  let finalES = 0, finalCM = 0, finalTW = 0, finalAD = 0;
+    const fES = getFinalThemeAvg('es');
+    const fCM = getFinalThemeAvg('comm');
+    const fTW = getFinalThemeAvg('tw');
+    const fAD = getFinalThemeAvg('ad');
+    const fTotal = (fES + fCM + fTW + fAD) / 4;
 
-  (Object.keys(weightedCalc) as Array<keyof typeof weightedCalc>).forEach((type) => {
-    const data = weightedCalc[type];
-    if (data.count > 0) {
-      finalES += (data.es / data.count) * data.weight;
-      finalCM += (data.cm / data.count) * data.weight;
-      finalTW += (data.tw / data.count) * data.weight;
-      finalAD += (data.ad / data.count) * data.weight;
-      totalWeight += data.weight;
-    }
-  });
+    await db.insert(behavioralScores).values({
+      employeeId: empId,
+      avgEmotionalStability: fES.toFixed(2),
+      avgCommunication: fCM.toFixed(2),
+      avgTeamwork: fTW.toFixed(2),
+      avgAdaptability: fAD.toFixed(2),
+      averages: finalDetails,
+      finalBehaviorScore: fTotal.toFixed(2),
+    }).onConflictDoUpdate({
+      target: behavioralScores.employeeId,
+      set: {
+        avgEmotionalStability: fES.toFixed(2),
+        avgCommunication: fCM.toFixed(2),
+        avgTeamwork: fTW.toFixed(2),
+        avgAdaptability: fAD.toFixed(2),
+        averages: finalDetails,
+        finalBehaviorScore: fTotal.toFixed(2),
+        updatedAt: new Date(),
+      }
+    });
 
-  // Normalize if not all types are present
-  const multiplier = totalWeight > 0 ? 1 / totalWeight : 0;
-  const avgES = finalES * multiplier;
-  const avgCM = finalCM * multiplier;
-  const avgTW = finalTW * multiplier;
-  const avgAD = finalAD * multiplier;
-  const finalScore = (avgES + avgCM + avgTW + avgAD) / 4;
-
-  // 4. Upsert behavioral score
-  const existingScore = await db.select().from(behavioralScores).where(eq(behavioralScores.employeeId, empId));
-
-  const scoreData = {
-    avgEmotionalStability: avgES.toFixed(2),
-    avgCommunication: avgCM.toFixed(2),
-    avgTeamwork: avgTW.toFixed(2),
-    avgAdaptability: avgAD.toFixed(2),
-    finalBehaviorScore: finalScore.toFixed(2),
-    updatedAt: new Date(),
-  };
-
-  if (existingScore.length > 0) {
-    await db.update(behavioralScores).set(scoreData).where(eq(behavioralScores.employeeId, empId));
-  } else {
-    await db.insert(behavioralScores).values({ employeeId: empId, ...scoreData });
+    return Response.json(newAssessment, { status: 201 });
+  } catch (error: any) {
+    console.error("POST Assessment Error:", error);
+    return Response.json({ error: error.message || "Gagal menyimpan penilaian." }, { status: 500 });
   }
-
-  return Response.json(newAssessment, { status: 201 });
 }

@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Mail, Building2, Briefcase, Hash, Plus, Trash2, Printer, Search } from "lucide-react";
+import { ArrowLeft, Mail, Building2, Briefcase, Hash, Plus, Trash2, Printer, Search, Sparkles, ClipboardCheck } from "lucide-react";
 import Link from "next/link";
 import useSWR from "swr";
 import { jsPDF } from "jspdf";
@@ -81,22 +81,22 @@ export default function KaryawanDetailPage({
         {
           label: "Stabilitas Emosional",
           score: Number(employee.behavioralScore.avgEmotionalStability),
-          maxScore: 5,
+          maxScore: 10,
         },
         {
           label: "Komunikasi",
           score: Number(employee.behavioralScore.avgCommunication),
-          maxScore: 5,
+          maxScore: 10,
         },
         {
           label: "Kerja Tim",
           score: Number(employee.behavioralScore.avgTeamwork),
-          maxScore: 5,
+          maxScore: 10,
         },
         {
           label: "Adaptabilitas",
           score: Number(employee.behavioralScore.avgAdaptability),
-          maxScore: 5,
+          maxScore: 10,
         },
       ]
     : [];
@@ -185,11 +185,11 @@ export default function KaryawanDetailPage({
         startY: currentY + 5,
         head: [["Kriteria Perilaku", "Skor (1-5)", "Keterangan"]],
         body: [
-          ["Stabilitas Emosional", Number(employee.behavioralScore.avgEmotionalStability).toFixed(2), "Rata-rata Gabungan"],
-          ["Komunikasi", Number(employee.behavioralScore.avgCommunication).toFixed(2), "Rata-rata Gabungan"],
-          ["Kerja Tim", Number(employee.behavioralScore.avgTeamwork).toFixed(2), "Rata-rata Gabungan"],
-          ["Adaptabilitas", Number(employee.behavioralScore.avgAdaptability).toFixed(2), "Rata-rata Gabungan"],
-          ["SKOR AKHIR PERILAKU", Number(employee.behavioralScore.finalBehaviorScore).toFixed(2), "Sangat Baik"],
+          ["Stabilitas Emosional", Number(employee.behavioralScore.avgEmotionalStability).toFixed(2), "Skor 1-10"],
+          ["Komunikasi", Number(employee.behavioralScore.avgCommunication).toFixed(2), "Skor 1-10"],
+          ["Kerja Tim", Number(employee.behavioralScore.avgTeamwork).toFixed(2), "Skor 1-10"],
+          ["Adaptabilitas", Number(employee.behavioralScore.avgAdaptability).toFixed(2), "Skor 1-10"],
+          ["SKOR AKHIR PERILAKU", Number(employee.behavioralScore.finalBehaviorScore).toFixed(2), "Skor 1-10"],
         ],
         theme: "grid",
         headStyles: { fillColor: [51, 65, 85] as [number, number, number] },
@@ -350,7 +350,7 @@ export default function KaryawanDetailPage({
               <p className="text-[10px] text-muted-foreground mb-4 italic">Visualisasi sebaran hard & soft skill</p>
               {skillRadarData.length > 2 ? (
                 <div className="h-[250px]">
-                  <SkillRadarChart data={skillRadarData} />
+                  <SkillRadarChart data={skillRadarData} maxDomain={5} />
                 </div>
               ) : (
                 <div className="h-[250px] flex items-center justify-center border border-dashed border-border/50 rounded-xl">
@@ -384,6 +384,102 @@ export default function KaryawanDetailPage({
                 <div className="h-[200px] flex items-center justify-center border border-dashed border-border/50 rounded-xl">
                   <p className="text-sm text-muted-foreground text-center px-4">
                     Belum ada penilaian perilaku dari rekan atau atasan.
+                  </p>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Detailed Behavioral Report (16 Indicators) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="glass-card rounded-2xl p-6 md:col-span-2"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="font-semibold text-lg flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" /> Raport Perilaku Detail
+                  </h3>
+                  <p className="text-xs text-muted-foreground">Analisis mendalam dari 16 indikator perilaku (Skala 1-10)</p>
+                </div>
+                {employee.behavioralScore && (
+                  <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                    Berdasarkan {employee.totalAssessments || 0} Penilaian
+                  </Badge>
+                )}
+              </div>
+
+              {employee.behavioralScore ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* ES Group */}
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20 pb-1">Emotional Stability</h4>
+                    {[
+                      { label: "Self Control", val: employee.behavioralScore.averages?.esSelfControl },
+                      { label: "Stress Tolerance", val: employee.behavioralScore.averages?.esStressTolerance },
+                      { label: "Resilience", val: employee.behavioralScore.averages?.esResilience },
+                      { label: "Objectivity", val: employee.behavioralScore.averages?.esObjectivity },
+                    ].map(item => (
+                      <div key={item.label} className="flex justify-between items-center">
+                        <span className="text-xs text-foreground/80">{item.label}</span>
+                        <span className="text-xs font-mono font-bold text-primary">{Number(item.val || 0).toFixed(1)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Comm Group */}
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20 pb-1">Communication</h4>
+                    {[
+                      { label: "Clarity", val: employee.behavioralScore.averages?.commClarity },
+                      { label: "Listening", val: employee.behavioralScore.averages?.commListening },
+                      { label: "Responsiveness", val: employee.behavioralScore.averages?.commResponsiveness },
+                      { label: "Empathy", val: employee.behavioralScore.averages?.commEmpathy },
+                    ].map(item => (
+                      <div key={item.label} className="flex justify-between items-center">
+                        <span className="text-xs text-foreground/80">{item.label}</span>
+                        <span className="text-xs font-mono font-bold text-primary">{Number(item.val || 0).toFixed(1)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* TW Group */}
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20 pb-1">Teamwork</h4>
+                    {[
+                      { label: "Reliability", val: employee.behavioralScore.averages?.twReliability },
+                      { label: "Proactive Support", val: employee.behavioralScore.averages?.twSupport },
+                      { label: "Information Sharing", val: employee.behavioralScore.averages?.twSharing },
+                      { label: "Conflict Resolution", val: employee.behavioralScore.averages?.twResolution },
+                    ].map(item => (
+                      <div key={item.label} className="flex justify-between items-center">
+                        <span className="text-xs text-foreground/80">{item.label}</span>
+                        <span className="text-xs font-mono font-bold text-primary">{Number(item.val || 0).toFixed(1)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* AD Group */}
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20 pb-1">Adaptability</h4>
+                    {[
+                      { label: "Learning Agility", val: employee.behavioralScore.averages?.adLearning },
+                      { label: "Flexibility", val: employee.behavioralScore.averages?.adFlexibility },
+                      { label: "Innovation", val: employee.behavioralScore.averages?.adInnovation },
+                      { label: "Versatility", val: employee.behavioralScore.averages?.adVersatility },
+                    ].map(item => (
+                      <div key={item.label} className="flex justify-between items-center">
+                        <span className="text-xs text-foreground/80">{item.label}</span>
+                        <span className="text-xs font-mono font-bold text-primary">{Number(item.val || 0).toFixed(1)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="h-[100px] flex items-center justify-center border border-dashed border-border/50 rounded-xl">
+                  <p className="text-sm text-muted-foreground text-center px-4 italic">
+                    Belum ada data detail.
                   </p>
                 </div>
               )}
@@ -602,9 +698,12 @@ export default function KaryawanDetailPage({
             </table>
           </div>
         ) : (
-          <div className="py-8 text-center border border-dashed border-border/50 rounded-xl">
+          <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-border/30 rounded-2xl bg-accent/5">
+            <div className="w-12 h-12 bg-muted/20 rounded-full flex items-center justify-center mb-3">
+              <ClipboardCheck className="w-6 h-6 text-muted-foreground/30" />
+            </div>
             <p className="text-muted-foreground text-sm">
-              Belum ada riwayat assessment.
+              Belum ada riwayat assessment untuk karyawan ini.
             </p>
           </div>
         )}
