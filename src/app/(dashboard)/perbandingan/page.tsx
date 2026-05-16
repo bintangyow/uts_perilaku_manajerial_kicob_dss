@@ -188,35 +188,86 @@ export default function PerbandinganPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="glass-card rounded-3xl p-8 bg-slate-900/40 border-slate-800">
                 <h4 className="text-xs font-bold text-primary uppercase tracking-widest mb-6 flex items-center gap-2">
-                  <Brain className="w-4 h-4" /> Insight: {empAData.name}
+                  <Brain className="w-4 h-4" /> Analisis Karir: {empAData.name}
                 </h4>
                 <ul className="space-y-4 text-sm text-slate-300">
-                   <li className="flex gap-3"><Zap className="w-4 h-4 text-primary shrink-0" /> Ideal untuk peran <strong>{empAData.behavioralScore?.avgCommunication > 7 ? 'Komunikasi/Lead' : 'Spesialis Teknis'}</strong>.</li>
-                   <li className="flex gap-3"><Target className="w-4 h-4 text-primary shrink-0" /> Saran: {empAData.behavioralScore?.avgAdaptability < 7 ? 'Training Adaptabilitas' : 'Peningkatan Hard Skill'}.</li>
+                   <li className="flex gap-3">
+                     <Zap className="w-4 h-4 text-primary shrink-0" />
+                     <span>
+                       {Number(empAData.behavioralScore?.avgCommunication) > 7.5 
+                         ? `Sangat piawai dalam menjalin komunikasi dan koordinasi tim, terlihat dari skor yang menonjol.` 
+                         : `Cenderung lebih produktif saat bekerja secara mandiri dan fokus pada penyelesaian tugas teknis.`}
+                     </span>
+                   </li>
+                   <li className="flex gap-3">
+                     <Target className="w-4 h-4 text-primary shrink-0" />
+                     <span>
+                       {(() => {
+                         const scores = [
+                           { name: 'Stabilitas Emosional', val: Number(empAData.behavioralScore?.avgEmotionalStability) },
+                           { name: 'Komunikasi', val: Number(empAData.behavioralScore?.avgCommunication) },
+                           { name: 'Kerja Tim', val: Number(empAData.behavioralScore?.avgTeamwork) },
+                           { name: 'Adaptabilitas', val: Number(empAData.behavioralScore?.avgAdaptability) },
+                         ];
+                         const lowest = scores.sort((a, b) => a.val - b.val)[0];
+                         return lowest.val < 6.5 
+                           ? `Aspek ${lowest.name} masih bisa ditingkatkan lagi agar keseimbangan kompetensinya lebih terjaga.`
+                           : `Memiliki pondasi perilaku yang solid dan siap mengemban tanggung jawab yang lebih besar.`;
+                       })()}
+                     </span>
+                   </li>
                 </ul>
               </div>
 
               <div className="glass-card rounded-3xl p-8 bg-slate-900/40 border-slate-800">
                 <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-6 flex items-center gap-2">
-                  <Brain className="w-4 h-4" /> Insight: {empBData.name}
+                  <Brain className="w-4 h-4" /> Analisis Karir: {empBData.name}
                 </h4>
                 <ul className="space-y-4 text-sm text-slate-300">
-                   <li className="flex gap-3"><Zap className="w-4 h-4 text-amber-500 shrink-0" /> Ideal untuk posisi <strong>{empBData.behavioralScore?.avgTeamwork > 7 ? 'Kolaborasi Tim' : 'Individual Contributor'}</strong>.</li>
-                   <li className="flex gap-3"><Target className="w-4 h-4 text-amber-500 shrink-0" /> Saran: {empBData.behavioralScore?.avgEmotionalStability < 7 ? 'Manajemen Stres' : 'Pengembangan Strategis'}.</li>
+                   <li className="flex gap-3">
+                     <Zap className="w-4 h-4 text-amber-500 shrink-0" />
+                     <span>
+                       {Number(empBData.behavioralScore?.avgTeamwork) > 7.5 
+                         ? `Memiliki jiwa kolaborasi yang tinggi, sangat membantu dalam menjaga keharmonisan kerja di dalam tim.` 
+                         : `Menunjukkan ketelitian yang baik dalam bekerja, meskipun masih perlu didorong untuk lebih aktif berkolaborasi.`}
+                     </span>
+                   </li>
+                   <li className="flex gap-3">
+                     <Target className="w-4 h-4 text-amber-500 shrink-0" />
+                     <span>
+                       {(() => {
+                         const scores = [
+                           { name: 'Stabilitas Emosional', val: Number(empBData.behavioralScore?.avgEmotionalStability) },
+                           { name: 'Komunikasi', val: Number(empBData.behavioralScore?.avgCommunication) },
+                           { name: 'Kerja Tim', val: Number(empBData.behavioralScore?.avgTeamwork) },
+                           { name: 'Adaptabilitas', val: Number(empBData.behavioralScore?.avgAdaptability) },
+                         ];
+                         const lowest = scores.sort((a, b) => a.val - b.val)[0];
+                         return lowest.val < 6.5 
+                           ? `Pemberian bimbingan pada sisi ${lowest.name} akan sangat membantu proses perkembangannya ke depan.`
+                           : `Profil perilakunya menunjukkan kematangan yang merata di berbagai pilar kompetensi.`;
+                       })()}
+                     </span>
+                   </li>
                 </ul>
               </div>
             </div>
 
             {/* Final Verdict */}
             <div className="glass-card rounded-3xl p-10 bg-slate-900 border border-slate-800 text-center">
-              <Badge variant="outline" className="mb-4 border-slate-700 text-slate-500 uppercase tracking-widest text-[10px]">Managerial Recommendation</Badge>
-              <p className="text-xl font-bold text-slate-100">
+              <Badge variant="outline" className="mb-4 border-slate-700 text-slate-500 uppercase tracking-widest text-[10px]">Kesimpulan Strategis</Badge>
+              <p className="text-xl font-bold text-slate-100 italic tracking-tight">
                 {(() => {
                   const scoreA = Number(empAData.behavioralScore?.finalBehaviorScore || 0);
                   const scoreB = Number(empBData.behavioralScore?.finalBehaviorScore || 0);
-                  if (scoreA > scoreB) return `${empAData.name} unggul secara perilaku (+${(scoreA-scoreB).toFixed(1)}). Disarankan untuk peran dengan tanggung jawab lebih tinggi.`;
-                  if (scoreB > scoreA) return `${empBData.name} unggul secara perilaku (+${(scoreB-scoreA).toFixed(1)}). Disarankan untuk pengembangan kepemimpinan.`;
-                  return `Keduanya memiliki profil yang sangat seimbang. Pilihan dapat didasarkan pada kecocokan spesifik proyek.`;
+                  const gap = Math.abs(scoreA - scoreB);
+
+                  if (scoreA > scoreB) {
+                    return `Secara keseluruhan, ${empAData.name} menunjukkan keunggulan perilaku (+${gap.toFixed(1)}) yang menjadikannya kandidat paling potensial untuk didorong maju.`;
+                  } else if (scoreB > scoreA) {
+                    return `Secara keseluruhan, ${empBData.name} menunjukkan keunggulan perilaku (+${gap.toFixed(1)}) yang menjadikannya kandidat paling potensial untuk didorong maju.`;
+                  }
+                  return `Keduanya memiliki kualitas yang setara. Keputusan akhir dapat diselaraskan dengan kebutuhan mendesak proyek saat ini.`;
                 })()}
               </p>
             </div>
