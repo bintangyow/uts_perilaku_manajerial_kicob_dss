@@ -270,7 +270,28 @@ export default function RekomendasiPage() {
     const avgHard = (candidate.members.reduce((acc: number, m: any) => acc + Number(m.hardSkillScore || 0), 0) / candidate.members.length).toFixed(1);
     const avgSoft = (candidate.members.reduce((acc: number, m: any) => acc + Number(m.softFactorScore || 0), 0) / candidate.members.length).toFixed(1);
 
-    return `Komposisi tim ini direkomendasikan karena memiliki indeks kecocokan (matching rate) sebesar ${Number(candidate.totalScore).toFixed(1)}% terhadap profil kebutuhan proyek. Seluruh anggota tim memenuhi kriteria kompetensi teknis yang dipersyaratkan dengan rata-rata skor hard skill ${avgHard}/100, didukung oleh stabilitas perilaku (soft factor) pada level ${avgSoft}/100 untuk menjamin performa kolaborasi yang optimal.`;
+    let reason = `Komposisi tim ini direkomendasikan karena memiliki indeks kecocokan (matching rate) sebesar ${Number(candidate.totalScore).toFixed(1)}% terhadap profil kebutuhan proyek. Seluruh anggota tim memenuhi kriteria kompetensi teknis yang dipersyaratkan dengan rata-rata skor hard skill ${avgHard}/100, didukung oleh stabilitas perilaku (soft factor) pada level ${avgSoft}/100 untuk menjamin performa kolaborasi yang optimal.`;
+
+    const lowPerformers: string[] = [];
+
+    candidate.members.forEach((m: any) => {
+      const hScore = Number(m.hardSkillScore || 0);
+      const sScore = Number(m.softFactorScore || 0);
+
+      if (hScore < 70 && sScore < 70) {
+        lowPerformers.push(`- ${m.employeeName} (Hard Skill: ${hScore.toFixed(1)}, Soft Factor: ${sScore.toFixed(1)}): Perlu peningkatan kompetensi teknis dan bimbingan interpersonal.`);
+      } else if (hScore < 70) {
+        lowPerformers.push(`- ${m.employeeName} (Hard Skill: ${hScore.toFixed(1)}): Disarankan memberikan pelatihan teknis tambahan atau disandingkan dengan anggota senior.`);
+      } else if (sScore < 70) {
+        lowPerformers.push(`- ${m.employeeName} (Soft Factor: ${sScore.toFixed(1)}): Disarankan pendampingan untuk komunikasi dan adaptasi kolaborasi dalam tim.`);
+      }
+    });
+
+    if (lowPerformers.length > 0) {
+      reason += `\n\n⚠️ Catatan & Saran Pemilihan Anggota:\n` + lowPerformers.join('\n');
+    }
+
+    return reason;
   };
 
   return (
@@ -553,7 +574,7 @@ export default function RekomendasiPage() {
                       <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-2">
                         <Sparkles className="w-3 h-3 text-primary" /> Alasan Rekomendasi (DSS Analysis)
                       </p>
-                      <p className="text-xs text-foreground/80 leading-relaxed">
+                      <p className="text-xs text-foreground/80 leading-relaxed whitespace-pre-line">
                         {generateDetailedReason(c)}
                       </p>
                     </div>
