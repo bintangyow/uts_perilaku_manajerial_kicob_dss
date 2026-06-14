@@ -205,14 +205,14 @@ export default function RekomendasiPage() {
     const nextY = (doc as any).lastAutoTable.finalY + 15;
     doc.text(`2. Komposisi Tim Alternatif #${candidate.ranking}`, 14, nextY);
     doc.setFontSize(10);
-    doc.text(`Skor Gabungan (DSS Score): ${candidate.totalScore.toFixed(2)}`, 14, nextY + 7);
+    doc.text(`Skor Gabungan (DSS Score): ${Number(candidate.totalScore).toFixed(2)}`, 14, nextY + 7);
     
     const tableBody = candidate.members.map((m: any) => [
       m.employeeName,
       m.employeePosition,
-      m.hardSkillScore?.toFixed(1) || "-",
-      m.softFactorScore?.toFixed(1) || "-",
-      m.contributionScore?.toFixed(1) || "-",
+      m.hardSkillScore != null ? Number(m.hardSkillScore).toFixed(1) : "-",
+      m.softFactorScore != null ? Number(m.softFactorScore).toFixed(1) : "-",
+      m.contributionScore != null ? Number(m.contributionScore).toFixed(1) : "-",
     ]);
 
     autoTable(doc, {
